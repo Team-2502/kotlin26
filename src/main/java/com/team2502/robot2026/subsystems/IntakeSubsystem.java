@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import static com.team2502.robot2026.Constants.Intake.INTAKE_MOTOR_ID;
+import static com.team2502.robot2026.Constants.Intake.*;
 
 public class IntakeSubsystem extends SubsystemBase {
     private final TalonFX intakeMotor;
@@ -17,11 +17,21 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeDutyCycle = new DutyCycleOut(0.0);
     }
 
+    public Command setDutyCycle(double dutyCycle) {
+        return new InstantCommand(
+                () -> intakeMotor.setControl(intakeDutyCycle.withOutput(dutyCycle))
+        );
+    }
+
     public Command intake() {
-        return new InstantCommand(() -> intakeMotor.setControl(intakeDutyCycle.withOutput(1.0)));
+        return setDutyCycle(INTAKE_IN_DUTY_CYCLE);
+    }
+
+    public Command outtake() {
+        return setDutyCycle(INTAKE_OUT_DUTY_CYCLE);
     }
 
     public Command stop() {
-        return new InstantCommand(() -> intakeMotor.setControl(intakeDutyCycle.withOutput(0.0)));
+        return setDutyCycle(0.0);
     }
 }

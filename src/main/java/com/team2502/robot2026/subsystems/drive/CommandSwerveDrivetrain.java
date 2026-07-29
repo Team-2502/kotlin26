@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import com.team2502.robot2026.subsystems.drive.generated.TunerConstants.TunerSwerveDrivetrain;
+import com.team2502.robot2026.subsystems.drive.TunerConstants.TunerSwerveDrivetrain;
 
 import java.util.Optional;
 import java.util.function.Supplier;
