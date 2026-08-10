@@ -39,4 +39,15 @@ public final class Constants {
         public static final double HANDOFF_RAMP_IN_DUTY_CYCLE = 1.0;
         public static final double HANDOFF_RAMP_OUT_DUTY_CYCLE = -1.0;
     }
+
+    public static final class Shooter {
+        public static final int SHOOTER_LEFT_MOTOR_ID = 23;
+        public static final int SHOOTER_RIGHT_MOTOR_ID = 23;
+        public static final int SHOOTER_HOOD_MOTOR_ID = 23;
+
+        public static final double SHOOTER_MIN_VELOCITY = 30;
+        public static final double SHOOTER_MAX_VELOCITY = 100;
+        public static final double HOOD_MIN_POSITION = 0.0;
+        public static final double HOOD_MAX_POSITION = 2.2992;
+    }
 }
