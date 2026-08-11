@@ -1,24 +1,96 @@
 package com.team2502.robot2026
 
 import com.ctre.phoenix6.signals.NeutralModeValue
-import com.team2502.robot2026.config.CANConfig
-import com.team2502.robot2026.config.MotorConfig
-import com.team2502.robot2026.config.PIDConfig
+import com.ctre.phoenix6.signals.SensorDirectionValue
+import com.team2502.lib.config.CANConfig
+import com.team2502.lib.config.EncoderConfig
+import com.team2502.lib.config.GyroConfig
+import com.team2502.lib.config.MotorConfig
+import com.team2502.lib.config.PIDConfig
 
 object RobotCAN {
     private val DRIVE_MOTOR_CONFIG =
         MotorConfig(PIDConfig(kP = 0.5), false, NeutralModeValue.Brake)
     private val TURN_MOTOR_CONFIG =
-        MotorConfig(PIDConfig(kP = 0.5), false, NeutralModeValue.Brake)
+        MotorConfig(PIDConfig(kP = 0.5), true, NeutralModeValue.Coast)
 
-    val FRONT_LEFT_DRIVE = CANConfig(1, "Front Left Drive", "rio", DRIVE_MOTOR_CONFIG)
-    val FRONT_RIGHT_DRIVE = CANConfig(2, "Front Right Drive", "rio", DRIVE_MOTOR_CONFIG)
-    val BACK_LEFT_DRIVE = CANConfig(3, "Back Left Drive", "rio", DRIVE_MOTOR_CONFIG)
-    val BACK_RIGHT_DRIVE = CANConfig(4, "Back Right Drive", "rio", DRIVE_MOTOR_CONFIG)
+    private val SWERVE_ENCODER_CONFIG =
+        EncoderConfig(
+            sensorDirection = SensorDirectionValue.CounterClockwise_Positive,
+            absoluteSensorDiscontinuityPoint = 1.0,
+        )
 
-    val INTAKE_MOTOR = CANConfig(
+    val FRONT_LEFT_DRIVE = CANConfig(2, "Front Left Drive", "rio", DRIVE_MOTOR_CONFIG)
+    val FRONT_RIGHT_DRIVE = CANConfig(11, "Front Right Drive", "rio", DRIVE_MOTOR_CONFIG)
+    val BACK_LEFT_DRIVE = CANConfig(5, "Back Left Drive", "rio", DRIVE_MOTOR_CONFIG)
+    val BACK_RIGHT_DRIVE = CANConfig(8, "Back Right Drive", "rio", DRIVE_MOTOR_CONFIG)
+
+    val FRONT_LEFT_TURN = CANConfig(canId = 3, name = "Front Left Turn", "rio", TURN_MOTOR_CONFIG)
+    val FRONT_RIGHT_TURN = CANConfig(canId = 12, name = "Front Right Turn", "rio", TURN_MOTOR_CONFIG)
+    val BACK_LEFT_TURN = CANConfig(canId = 6, name = "Back Left Turn", "rio", TURN_MOTOR_CONFIG)
+    val BACK_RIGHT_TURN = CANConfig(canId = 9, name = "Back Right Turn", "rio", TURN_MOTOR_CONFIG)
+
+    val FRONT_LEFT_ENCODER = CANConfig(canId = 1, name = "Front Left Encoder", "rio", SWERVE_ENCODER_CONFIG)
+    val FRONT_RIGHT_ENCODER = CANConfig(canId = 10, name = "Front Right Encoder", "rio", SWERVE_ENCODER_CONFIG)
+    val BACK_LEFT_ENCODER = CANConfig(canId = 4, name = "Back Left Encoder", "rio", SWERVE_ENCODER_CONFIG)
+    val BACK_RIGHT_ENCODER = CANConfig(canId = 7, name = "Back Right Encoder", "rio", SWERVE_ENCODER_CONFIG)
+
+    val INTAKE = CANConfig(
         18,
-        "Intake Drive",
+        "Intake",
         "rio",
-        MotorConfig(PIDConfig(kP = 0.1), ccwp = true, neutralMode = NeutralModeValue.Coast))
+        MotorConfig(PIDConfig(kP = 0.1), ccwp = false, neutralMode = NeutralModeValue.Coast))
+
+    val TURRET_ROTATE = CANConfig(
+        16,
+        "Turret Rotate",
+        "rio",
+        MotorConfig(PIDConfig(kP = 0.5, kI = 2.5), ccwp = true, neutralMode = NeutralModeValue.Brake))
+
+    val TUNNEL = CANConfig(
+        21,
+        "Tunnel",
+        "rio",
+        MotorConfig(PIDConfig(), ccwp = true, neutralMode = NeutralModeValue.Coast))
+
+    val RAMP = CANConfig(
+        22,
+        "Ramp",
+        "rio",
+        MotorConfig(PIDConfig(), ccwp = true, neutralMode = NeutralModeValue.Brake))
+
+    private val SHOOTER_PID_CONFIG = PIDConfig(kP = 0.03, kI = 0.12)
+
+    val SHOOTER_RIGHT = CANConfig(
+        13,
+        "Shooter Right",
+        "can0",
+        MotorConfig(SHOOTER_PID_CONFIG, ccwp = false, neutralMode = NeutralModeValue.Coast))
+
+    val SHOOTER_LEFT = CANConfig(
+        14,
+        "Shooter Left",
+        "can0",
+        MotorConfig(SHOOTER_PID_CONFIG, ccwp = true, neutralMode = NeutralModeValue.Coast))
+
+    val HOOD = CANConfig(
+        15,
+        "Hood",
+        "can0",
+        MotorConfig(PIDConfig(kP = 0.55), ccwp = false, neutralMode = NeutralModeValue.Brake)
+    )
+
+    val TURRET_ENCODER = CANConfig(
+        2,
+        "Turret Encoder",
+        "can0",
+        EncoderConfig(SensorDirectionValue.CounterClockwise_Positive, 0.5)
+    )
+
+    val GYRO = CANConfig(
+        23,
+        "Gyro",
+        "rio",
+        GyroConfig()
+    )
 }

@@ -1,4 +1,4 @@
-package com.team2502.robot2026.config
+package com.team2502.lib.config
 
 @JvmRecord
 data class CANConfig<C : DeviceConfig<*>>(
