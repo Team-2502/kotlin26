@@ -19,9 +19,9 @@ data class MotorConfig(
                 MotorOutputConfigs()
                     .withInverted(
                         if (ccwp)
-                            InvertedValue.Clockwise_Positive
-                        else
                             InvertedValue.CounterClockwise_Positive
+                        else
+                            InvertedValue.Clockwise_Positive
                     )
                     .withNeutralMode(neutralMode)
             )

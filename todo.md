@@ -1,7 +1,11 @@
 ## revisit
 - [ ] robotCAN -> commandSwerveDrivetrain?
+- [ ] figure out CANBus object things w/ robotCAN
 ---
 ## implement
-- [ ] turret move to angle
+- [x] turret move to angle
+  - untested
 - [ ] localization
-- [ ] turret zero reading
+- [x] turret zero reading
+  - untested
+- [ ] limelight interface?

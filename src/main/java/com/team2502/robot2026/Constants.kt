@@ -44,8 +44,15 @@ class Constants {
 
     object Turret {
         const val MOTOR_TO_TURRET_RATIO: Double = 34.5
+        const val ABS_TO_RELATIVE_RATIO: Double = 6.0
+
+        const val TURRET_ABSOLUTE_ENCODER_ZERO_ROTATIONS: Double = -0.199463
 
         // Max amount of revolution per frame of turret motor
         const val TURRET_CLAMP: Double = 2.5
+    }
+
+    object Localization {
+        const val BACK_LIMELIGHT_NAME: String = ""
     }
 }

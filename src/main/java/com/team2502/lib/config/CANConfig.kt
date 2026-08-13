@@ -6,4 +6,4 @@ data class CANConfig<C : DeviceConfig<*>>(
     val name: String,
     val busName: String,
     val config: C
-) 
+)
