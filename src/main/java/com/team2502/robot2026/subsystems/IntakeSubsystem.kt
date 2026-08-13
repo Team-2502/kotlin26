@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 
 class IntakeSubsystem : SubsystemBase() {
-    private val intakeMotor= TalonFX(Constants.Intake.INTAKE_MOTOR_ID)
+    private val intakeMotor= TalonFX(INTAKE.canId)
     private val intakeDutyCycleRequest = DutyCycleOut(0.0)
 
     init {

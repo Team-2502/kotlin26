@@ -4,7 +4,8 @@ import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.hardware.TalonFX
 import com.team2502.robot2026.Constants
-import com.team2502.robot2026.Constants.Shooter.SHOOTER_HOOD_MOTOR_ID
+import com.team2502.robot2026.Constants.Shooter.SHOOTER_MAX_VELOCITY
+import com.team2502.robot2026.Constants.Shooter.SHOOTER_MIN_VELOCITY
 import com.team2502.robot2026.RobotCAN.HOOD
 import com.team2502.robot2026.RobotCAN.SHOOTER_LEFT
 import com.team2502.robot2026.RobotCAN.SHOOTER_RIGHT
@@ -15,9 +16,9 @@ import kotlin.math.max
 import kotlin.math.min
 
 class ShooterSubsystem : SubsystemBase() {
-    private val shooterLeftMotor = TalonFX(Constants.Shooter.SHOOTER_LEFT_MOTOR_ID)
-    private val shooterRightMotor = TalonFX(Constants.Shooter.SHOOTER_RIGHT_MOTOR_ID)
-    private val shooterHoodMotor = TalonFX(Constants.Shooter.SHOOTER_HOOD_MOTOR_ID)
+    private val shooterLeftMotor = TalonFX(SHOOTER_LEFT.canId)
+    private val shooterRightMotor = TalonFX(SHOOTER_RIGHT.canId)
+    private val shooterHoodMotor = TalonFX(HOOD.canId)
 
     private val shooterVelocityRequest = VelocityVoltage(0.0)
     private val shooterPositionRequest = PositionVoltage(0.0)
@@ -29,8 +30,7 @@ class ShooterSubsystem : SubsystemBase() {
     }
 
     fun setShooterSpeed(velocity: Double): Command {
-        val clampedVelocity =
-            max(Constants.Shooter.SHOOTER_MIN_VELOCITY, min(Constants.Shooter.SHOOTER_MAX_VELOCITY, velocity))
+        val clampedVelocity = velocity.coerceIn(SHOOTER_MIN_VELOCITY, SHOOTER_MAX_VELOCITY)
         return runOnce {
             shooterLeftMotor.setControl(shooterVelocityRequest.withVelocity(clampedVelocity))
             shooterRightMotor.setControl(shooterVelocityRequest.withVelocity(-clampedVelocity))

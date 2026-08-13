@@ -24,16 +24,11 @@ class Constants {
     }
 
     object Intake {
-        const val INTAKE_MOTOR_ID: Int = 18
-
         const val INTAKE_IN_DUTY_CYCLE: Double = 1.0
         const val INTAKE_OUT_DUTY_CYCLE: Double = -1.0
     }
 
     object Handoff {
-        const val TUNNEL_MOTOR_ID: Int = 21
-        const val RAMP_MOTOR_ID: Int = 22
-
         const val HANDOFF_TUNNEL_IN_DUTY_CYCLE: Double = 1.0
         const val HANDOFF_TUNNEL_OUT_DUTY_CYCLE: Double = -1.0
         const val HANDOFF_RAMP_IN_DUTY_CYCLE: Double = 1.0
@@ -41,13 +36,16 @@ class Constants {
     }
 
     object Shooter {
-        const val SHOOTER_LEFT_MOTOR_ID: Int = 23
-        const val SHOOTER_RIGHT_MOTOR_ID: Int = 23
-        const val SHOOTER_HOOD_MOTOR_ID: Int = 23
-
         const val SHOOTER_MIN_VELOCITY: Double = 30.0
         const val SHOOTER_MAX_VELOCITY: Double = 100.0
         const val HOOD_MIN_POSITION: Double = 0.0
         const val HOOD_MAX_POSITION: Double = 2.2992
+    }
+
+    object Turret {
+        const val MOTOR_TO_TURRET_RATIO: Double = 34.5
+
+        // Max amount of revolution per frame of turret motor
+        const val TURRET_CLAMP: Double = 2.5
     }
 }

@@ -41,9 +41,9 @@ object RobotCAN {
         "rio",
         MotorConfig(PIDConfig(kP = 0.1), ccwp = false, neutralMode = NeutralModeValue.Coast))
 
-    val TURRET_ROTATE = CANConfig(
+    val TURRET = CANConfig(
         16,
-        "Turret Rotate",
+        "Turret",
         "rio",
         MotorConfig(PIDConfig(kP = 0.5, kI = 2.5), ccwp = true, neutralMode = NeutralModeValue.Brake))
 

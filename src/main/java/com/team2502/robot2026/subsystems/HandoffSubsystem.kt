@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 
 class HandoffSubsystem : SubsystemBase() {
-    private val tunnelMotor = TalonFX(Handoff.TUNNEL_MOTOR_ID)
-    private val rampMotor = TalonFX(Handoff.RAMP_MOTOR_ID)
+    private val tunnelMotor = TalonFX(TUNNEL.canId)
+    private val rampMotor = TalonFX(RAMP.canId)
     private val handoffDutyCycleRequest = DutyCycleOut(0.0)
 
     init {
