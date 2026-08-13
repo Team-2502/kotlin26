@@ -19,11 +19,17 @@ class HandoffSubsystem : SubsystemBase() {
     }
 
     fun setTunnelDutyCycle(dutyCycle: Double): Command {
-        return runOnce { tunnelMotor.setControl(handoffDutyCycleRequest.withOutput(dutyCycle)) }
+        return runEnd(
+            {tunnelMotor.setControl(handoffDutyCycleRequest.withOutput(dutyCycle))},
+            {tunnelMotor.setControl(handoffDutyCycleRequest.withOutput(0.0))}
+        )
     }
 
     fun setRampDutyCycle(dutyCycle: Double): Command {
-        return runOnce { rampMotor.setControl(handoffDutyCycleRequest.withOutput(dutyCycle)) }
+        return runEnd(
+            {rampMotor.setControl(handoffDutyCycleRequest.withOutput(dutyCycle))},
+            {rampMotor.setControl(handoffDutyCycleRequest.withOutput(0.0))}
+        )
     }
 
     fun intake(): Command {

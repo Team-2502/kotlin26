@@ -7,11 +7,13 @@ import com.ctre.phoenix6.swerve.SwerveModule
 import com.ctre.phoenix6.swerve.SwerveRequest
 import com.team2502.lib.TMJoystick
 import com.team2502.robot2026.Constants.OI
+import com.team2502.robot2026.subsystems.HandoffSubsystem
 import com.team2502.robot2026.subsystems.IntakeSubsystem
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.Commands.parallel
 import java.util.function.Supplier
 
 class RobotContainer {
@@ -23,6 +25,7 @@ class RobotContainer {
     // Subsystems
     val drivetrainSubsystem: CommandSwerveDrivetrain = TunerConstants.createDrivetrain()
     val intakeSubsystem: IntakeSubsystem = IntakeSubsystem()
+    val handoffSubsystem: HandoffSubsystem = HandoffSubsystem()
 
     // Swerve Command Setups
     private val driveRequest: SwerveRequest.FieldCentric = SwerveRequest.FieldCentric()
@@ -45,7 +48,7 @@ class RobotContainer {
         }
 
         // Intake Bindings
-        driverRight.trigger().whileTrue(intakeSubsystem.intake()).whileFalse(intakeSubsystem.stop())
+        driverRight.trigger().whileTrue(parallel(intakeSubsystem.intake(), handoffSubsystem.intake()))
     }
 
     val autonomousCommand: Command

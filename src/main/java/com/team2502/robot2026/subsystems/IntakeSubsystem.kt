@@ -16,7 +16,10 @@ class IntakeSubsystem : SubsystemBase() {
     }
 
     fun setDutyCycle(dutyCycle: Double): Command {
-        return runOnce { intakeMotor.setControl(intakeDutyCycleRequest.withOutput(dutyCycle)) }
+        return runEnd(
+            {intakeMotor.setControl(intakeDutyCycleRequest.withOutput(dutyCycle))},
+            {intakeMotor.setControl(intakeDutyCycleRequest.withOutput(0.0))},
+        )
     }
 
     fun intake(): Command {
