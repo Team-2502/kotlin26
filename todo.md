@@ -5,7 +5,14 @@
 ## implement
 - [x] turret move to angle
   - untested
-- [ ] localization
 - [x] turret zero reading
   - untested
-- [ ] limelight interface?
+---
+## abstract
+- [ ] prog dash
+- [ ] drive dash
+- [ ] localization system
+- [ ] logging system
+---
+## notes
+- clamp removed from shooter set speeds, will be managed in shoot to eventually

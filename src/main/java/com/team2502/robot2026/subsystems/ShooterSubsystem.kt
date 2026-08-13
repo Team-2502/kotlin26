@@ -9,7 +9,6 @@ import com.team2502.robot2026.Constants.Shooter.SHOOTER_MIN_VELOCITY
 import com.team2502.robot2026.RobotCAN.HOOD
 import com.team2502.robot2026.RobotCAN.SHOOTER_LEFT
 import com.team2502.robot2026.RobotCAN.SHOOTER_RIGHT
-import com.team2502.robot2026.RobotCAN.TUNNEL
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import kotlin.math.max
@@ -30,10 +29,9 @@ class ShooterSubsystem : SubsystemBase() {
     }
 
     fun setShooterSpeed(velocity: Double): Command {
-        val clampedVelocity = velocity.coerceIn(SHOOTER_MIN_VELOCITY, SHOOTER_MAX_VELOCITY)
         return runOnce {
-            shooterLeftMotor.setControl(shooterVelocityRequest.withVelocity(clampedVelocity))
-            shooterRightMotor.setControl(shooterVelocityRequest.withVelocity(-clampedVelocity))
+            shooterLeftMotor.setControl(shooterVelocityRequest.withVelocity(velocity))
+            shooterRightMotor.setControl(shooterVelocityRequest.withVelocity(-velocity))
         }
     }
 
