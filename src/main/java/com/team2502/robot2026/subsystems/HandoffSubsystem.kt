@@ -3,6 +3,8 @@ package com.team2502.robot2026.subsystems
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.hardware.TalonFX
 import com.team2502.robot2026.Constants.Handoff
+import com.team2502.robot2026.RobotCAN.RAMP
+import com.team2502.robot2026.RobotCAN.TUNNEL
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 
@@ -10,6 +12,11 @@ class HandoffSubsystem : SubsystemBase() {
     private val tunnelMotor = TalonFX(Handoff.TUNNEL_MOTOR_ID)
     private val rampMotor = TalonFX(Handoff.RAMP_MOTOR_ID)
     private val handoffDutyCycleRequest = DutyCycleOut(0.0)
+
+    init {
+        tunnelMotor.configurator.apply(TUNNEL.config.generate())
+        rampMotor.configurator.apply(RAMP.config.generate())
+    }
 
     fun setTunnelDutyCycle(dutyCycle: Double): Command {
         return runOnce { tunnelMotor.setControl(handoffDutyCycleRequest.withOutput(dutyCycle)) }
