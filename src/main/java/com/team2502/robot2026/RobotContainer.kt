@@ -7,8 +7,10 @@ import com.ctre.phoenix6.swerve.SwerveModule
 import com.ctre.phoenix6.swerve.SwerveRequest
 import com.team2502.lib.TMJoystick
 import com.team2502.robot2026.Constants.OI
-import com.team2502.robot2026.commands.RunIntakeCommand
+import com.team2502.robot2026.commands.runIntakeCommand
 import com.team2502.robot2026.commands.VisionUpdateCommand
+import com.team2502.robot2026.commands.runOuttakeCommand
+import com.team2502.robot2026.commands.runUnjamCommand
 import com.team2502.robot2026.subsystems.IntakeSubsystem
 import com.team2502.robot2026.subsystems.LocalizationSubsystem
 import com.team2502.robot2026.subsystems.ShooterSubsystem
@@ -17,7 +19,6 @@ import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
-import edu.wpi.first.wpilibj2.command.Commands.parallel
 import java.util.concurrent.atomic.AtomicReference
 
 class RobotContainer {
@@ -40,10 +41,12 @@ class RobotContainer {
         .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
 
 
+    // setup for global subsystem access
     init {
         INSTANCE = this
     }
 
+    // separate from init b/c init needs to execute first
     fun initialize() {
         configureBindings()
     }
@@ -58,15 +61,16 @@ class RobotContainer {
         }
 
         // Intake Bindings
-        driverRight.middleThumbButton().whileTrue(RunIntakeCommand())
-        // driverRight.trigger().whileTrue(shooterSubsystem.setShooterSpeed(40.0)).whileFalse(shooterSubsystem.stop())
-
+        driverRight.trigger().whileTrue(runIntakeCommand())
+        driverRight.leftThumbButton().whileTrue(runOuttakeCommand())
+        driverRight.middleThumbButton().whileTrue(runUnjamCommand())
         driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())
     }
 
     val autonomousCommand: Command
         get() = Commands.print("No autonomous command configured")
 
+    // global subsystem access via companion object
     companion object {
         private val INSTANCE_CONTAINER = AtomicReference<RobotContainer>()
         var INSTANCE: RobotContainer

@@ -25,24 +25,24 @@ class ShooterSubsystem : SubsystemBase() {
     private val shooterVelocityRequest = VelocityVoltage(0.0)
     private val shooterPositionRequest = PositionVoltage(0.0)
 
-    fun setShooterSpeed(velocity: Double): Command {
-        return runOnce {
-            shooterLeftMotor.setControl(shooterVelocityRequest.withVelocity(velocity))
-            shooterRightMotor.setControl(shooterVelocityRequest.withVelocity(-velocity))
-        }
+    fun setShooterSpeed(velocity: Double) {
+        shooterLeftMotor.setControl(shooterVelocityRequest.withVelocity(velocity))
+        shooterRightMotor.setControl(shooterVelocityRequest.withVelocity(-velocity))
     }
 
-    fun setHoodPosition(position: Double): Command {
+    fun setHoodPosition(position: Double) {
         val clampedPosition =
             max(Constants.Shooter.HOOD_MIN_POSITION, min(Constants.Shooter.HOOD_MAX_POSITION, position))
-        return runOnce { shooterHoodMotor.setControl(shooterPositionRequest.withPosition(clampedPosition)) }
+        shooterHoodMotor.setControl(shooterPositionRequest.withPosition(clampedPosition))
     }
 
-    fun stop(): Command {
-        return runOnce {
-            shooterLeftMotor.stopMotor()
-            shooterRightMotor.stopMotor()
-            shooterHoodMotor.stopMotor()
-        }
+    fun stopShooter() {
+        shooterLeftMotor.stopMotor()
+        shooterRightMotor.stopMotor()
+        shooterHoodMotor.stopMotor()
+    }
+
+    fun stopHood() {
+        shooterHoodMotor.stopMotor()
     }
 }

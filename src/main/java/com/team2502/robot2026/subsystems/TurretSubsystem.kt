@@ -49,18 +49,18 @@ class TurretSubsystem : SubsystemBase() {
         }
     }
 
-    private fun setTurretPosition(position: Double): Command {
-        return runOnce({turretMotor.setControl(turretPositionRequest.withPosition(position))})
+    private fun setTurretPosition(position: Double) {
+        turretMotor.setControl(turretPositionRequest.withPosition(position))
     }
 
     /** points turret to a ROBOT relative angle, with 0 being away from intake **/
-    fun pointTo(angle: Rotation2d): Command {
+    fun pointTo(angle: Rotation2d) {
         val currentPositon = turretMotor.position.valueAsDouble
 
         val wrappedAngle = Rotation2d(angleModulus(angle.radians))
         val targetPosition =
             ((wrappedAngle.rotations * MOTOR_TO_TURRET_RATIO) + turretZeroPosition.rotations)
                 .coerceIn(currentPositon - TURRET_CLAMP, currentPositon + TURRET_CLAMP)
-        return runOnce({setTurretPosition(targetPosition)})
+        setTurretPosition(targetPosition)
     }
 }
