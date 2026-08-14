@@ -8,13 +8,12 @@ import com.ctre.phoenix6.swerve.SwerveRequest
 import com.team2502.lib.TMJoystick
 import com.team2502.robot2026.Constants.OI
 import com.team2502.robot2026.commands.runIntakeCommand
-import com.team2502.robot2026.commands.VisionUpdateCommand
 import com.team2502.robot2026.commands.runOuttakeCommand
 import com.team2502.robot2026.commands.runUnjamCommand
 import com.team2502.robot2026.subsystems.IntakeSubsystem
-import com.team2502.robot2026.subsystems.LocalizationSubsystem
 import com.team2502.robot2026.subsystems.ShooterSubsystem
 import com.team2502.robot2026.subsystems.TurretSubsystem
+import com.team2502.robot2026.subsystems.VisionSubsystem
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
 import edu.wpi.first.wpilibj2.command.Command
@@ -32,7 +31,6 @@ class RobotContainer {
     val intakeSubsystem: IntakeSubsystem = IntakeSubsystem()
     val shooterSubsystem: ShooterSubsystem = ShooterSubsystem()
     val turretSubsystem: TurretSubsystem = TurretSubsystem()
-    val localizationSubsystem: LocalizationSubsystem = LocalizationSubsystem()
 
     // Swerve Command Setups
     private val driveRequest: SwerveRequest.FieldCentric = SwerveRequest.FieldCentric()
@@ -49,6 +47,7 @@ class RobotContainer {
     // separate from init b/c init needs to execute first
     fun initialize() {
         configureBindings()
+
     }
 
     private fun configureBindings() {
@@ -64,7 +63,7 @@ class RobotContainer {
         driverRight.trigger().whileTrue(runIntakeCommand())
         driverRight.leftThumbButton().whileTrue(runOuttakeCommand())
         driverRight.middleThumbButton().whileTrue(runUnjamCommand())
-        driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())
+        // driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())
     }
 
     val autonomousCommand: Command

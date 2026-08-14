@@ -54,5 +54,6 @@ class Constants {
 
     object Localization {
         const val LIMELIGHT_SIDE_NAME: String = "limelight-side"
+        const val LIMELIGHT_FRONT_NAME: String = "limelight-front"
     }
 }

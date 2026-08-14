@@ -3,6 +3,12 @@
 // the WPILib BSD license file in the root directory of this project.
 package com.team2502.robot2026
 
+import com.ctre.phoenix6.Utils
+import com.team2502.robot2026.Constants.Localization.LIMELIGHT_FRONT_NAME
+import com.team2502.robot2026.Constants.Localization.LIMELIGHT_SIDE_NAME
+import com.team2502.robot2026.subsystems.VisionSubsystem
+import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
+import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain.*
 import edu.wpi.first.wpilibj.TimedRobot
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
@@ -10,8 +16,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 class Robot : TimedRobot() {
     private var autonomousCommand: Command? = null
-
     private val robotContainer = RobotContainer()
+    val driveSubsystem = RobotContainer.INSTANCE.drivetrainSubsystem
 
     init {
         robotContainer.initialize()
@@ -33,7 +39,11 @@ class Robot : TimedRobot() {
         CommandScheduler.getInstance().schedule(autonomousCommand)
     }
 
-    override fun autonomousPeriodic() {}
+    override fun autonomousPeriodic() {
+        VisionSubsystem.update()
+
+        print(driveSubsystem.state.Pose)
+    }
 
     override fun autonomousExit() {}
 
@@ -43,7 +53,11 @@ class Robot : TimedRobot() {
         }
     }
 
-    override fun teleopPeriodic() {}
+    override fun teleopPeriodic() {
+        VisionSubsystem.update()
+
+        print(driveSubsystem.state.Pose)
+    }
 
     override fun teleopExit() {}
 
