@@ -26,13 +26,8 @@ class Constants {
     object Intake {
         const val INTAKE_IN_DUTY_CYCLE: Double = 1.0
         const val INTAKE_OUT_DUTY_CYCLE: Double = -1.0
-    }
-
-    object Handoff {
-        const val HANDOFF_TUNNEL_IN_DUTY_CYCLE: Double = 1.0
-        const val HANDOFF_TUNNEL_OUT_DUTY_CYCLE: Double = -1.0
-        const val HANDOFF_RAMP_IN_DUTY_CYCLE: Double = 1.0
-        const val HANDOFF_RAMP_OUT_DUTY_CYCLE: Double = -1.0
+        const val TUNNEL_IN_DUTY_CYCLE: Double = 1.0
+        const val TUNNEL_OUT_DUTY_CYCLE: Double = -1.0
     }
 
     object Shooter {
@@ -40,6 +35,9 @@ class Constants {
         const val SHOOTER_MAX_VELOCITY: Double = 100.0
         const val HOOD_MIN_POSITION: Double = 0.0
         const val HOOD_MAX_POSITION: Double = 2.2992
+
+        const val SHOOTER_RAMP_IN_DUTY_CYCLE: Double = 1.0
+        const val SHOOTER_RAMP_OUT_DUTY_CYCLE: Double = -1.0
     }
 
     object Turret {
@@ -53,6 +51,6 @@ class Constants {
     }
 
     object Localization {
-        const val BACK_LIMELIGHT_NAME: String = ""
+        const val LIMELIGHT_SIDE_NAME: String = "limelight-side"
     }
 }

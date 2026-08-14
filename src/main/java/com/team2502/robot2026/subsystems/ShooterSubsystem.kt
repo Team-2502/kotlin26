@@ -3,10 +3,12 @@ package com.team2502.robot2026.subsystems
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.hardware.TalonFX
+import com.team2502.lib.config.create
 import com.team2502.robot2026.Constants
 import com.team2502.robot2026.Constants.Shooter.SHOOTER_MAX_VELOCITY
 import com.team2502.robot2026.Constants.Shooter.SHOOTER_MIN_VELOCITY
 import com.team2502.robot2026.RobotCAN.HOOD
+import com.team2502.robot2026.RobotCAN.RAMP
 import com.team2502.robot2026.RobotCAN.SHOOTER_LEFT
 import com.team2502.robot2026.RobotCAN.SHOOTER_RIGHT
 import edu.wpi.first.wpilibj2.command.Command
@@ -15,18 +17,13 @@ import kotlin.math.max
 import kotlin.math.min
 
 class ShooterSubsystem : SubsystemBase() {
-    private val shooterLeftMotor = TalonFX(SHOOTER_LEFT.canId)
-    private val shooterRightMotor = TalonFX(SHOOTER_RIGHT.canId)
-    private val shooterHoodMotor = TalonFX(HOOD.canId)
+    private val shooterLeftMotor = SHOOTER_LEFT.create()
+    private val shooterRightMotor = SHOOTER_RIGHT.create()
+    private val shooterHoodMotor = HOOD.create()
+    private val rampMotor = RAMP.create()
 
     private val shooterVelocityRequest = VelocityVoltage(0.0)
     private val shooterPositionRequest = PositionVoltage(0.0)
-
-    init {
-        shooterLeftMotor.configurator.apply(SHOOTER_LEFT.config.generate())
-        shooterRightMotor.configurator.apply(SHOOTER_RIGHT.config.generate())
-        shooterHoodMotor.configurator.apply(HOOD.config.generate())
-    }
 
     fun setShooterSpeed(velocity: Double): Command {
         return runOnce {

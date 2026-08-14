@@ -1,6 +1,6 @@
 ## revisit
 - [ ] robotCAN -> commandSwerveDrivetrain?
-- [ ] figure out CANBus object things w/ robotCAN
+- [x] figure out CANBus object things w/ robotCAN
 ---
 ## implement
 - [x] turret move to angle

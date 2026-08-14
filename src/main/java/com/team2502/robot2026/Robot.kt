@@ -6,11 +6,16 @@ package com.team2502.robot2026
 import edu.wpi.first.wpilibj.TimedRobot
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
+import java.util.concurrent.atomic.AtomicReference
 
 class Robot : TimedRobot() {
     private var autonomousCommand: Command? = null
 
     private val robotContainer = RobotContainer()
+
+    init {
+        robotContainer.initialize()
+    }
 
     override fun robotPeriodic() {
         CommandScheduler.getInstance().run()
