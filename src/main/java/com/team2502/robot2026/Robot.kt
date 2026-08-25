@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicReference
 class Robot : TimedRobot() {
     private var autonomousCommand: Command? = null
     private val robotContainer = RobotContainer()
-    val driveSubsystem = RobotContainer.INSTANCE.drivetrainSubsystem
 
     init {
         robotContainer.initialize()
@@ -42,7 +41,7 @@ class Robot : TimedRobot() {
     override fun autonomousPeriodic() {
         VisionSubsystem.update()
 
-        print(driveSubsystem.state.Pose)
+        print(robotContainer.drivetrainSubsystem.state.Pose)
     }
 
     override fun autonomousExit() {}
@@ -56,7 +55,7 @@ class Robot : TimedRobot() {
     override fun teleopPeriodic() {
         VisionSubsystem.update()
 
-        print(driveSubsystem.state.Pose)
+        println("pose: ${robotContainer.drivetrainSubsystem.state.Pose}")
     }
 
     override fun teleopExit() {}

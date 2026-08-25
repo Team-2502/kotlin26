@@ -29,7 +29,7 @@ class Constants {
         const val TUNNEL_IN_DUTY_CYCLE: Double = 1.0
         const val TUNNEL_OUT_DUTY_CYCLE: Double = -1.0
 
-        const val UNJAM_CYCLE_TIME_SECONDS: Double = 0.5
+        const val UNJAM_CYCLE_TIME_SECONDS: Double = 0.25
     }
 
     object Shooter {

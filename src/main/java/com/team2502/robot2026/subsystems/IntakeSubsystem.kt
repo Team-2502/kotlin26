@@ -22,11 +22,11 @@ class IntakeSubsystem : SubsystemBase() {
     }
 
     fun intake() {
-        setDutyCycle(INTAKE_IN_DUTY_CYCLE, 0.0)
+        setDutyCycle(INTAKE_IN_DUTY_CYCLE, TUNNEL_IN_DUTY_CYCLE)
     }
 
     fun outtake() {
-        setDutyCycle(INTAKE_OUT_DUTY_CYCLE, 0.0)
+        setDutyCycle(INTAKE_OUT_DUTY_CYCLE, TUNNEL_OUT_DUTY_CYCLE)
     }
 
     fun stop() {

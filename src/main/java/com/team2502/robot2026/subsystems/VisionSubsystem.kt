@@ -19,16 +19,24 @@ object VisionSubsystem {
         return LimelightHelpers.getBotPose2d(limelightName)
     }
 
-    fun getStdDev(limelightName: String) : Matrix<N3, N1> {
+    fun getStdDev(limelightName: String) : Matrix<N3, N1>? {
         val tagArea = LimelightHelpers.getTA(limelightName)
         val distAreaModifier = 0.00000961227 * tagArea.pow(-1.25093)
 
         val stdDev = LimelightHelpers.getLimelightNTDoubleArray(
             limelightName,
-            "stdev_mt1"
+            "stddevs"
         )
 
-        return VecBuilder.fill(stdDev.get(0) + distAreaModifier, stdDev.get(1) + distAreaModifier, stdDev.get(5));
+        if (stdDev.size == 0) {
+            return null
+        } else {
+            return VecBuilder.fill(
+                distAreaModifier,
+                distAreaModifier,
+                stdDev[5]
+            );
+        }
     }
 
     fun update() {
@@ -39,15 +47,20 @@ object VisionSubsystem {
         val sideStdDev = getStdDev(LIMELIGHT_SIDE_NAME)
         val frontStdDev = getStdDev(LIMELIGHT_FRONT_NAME)
 
-        driveSubsystem.addVisionMeasurement(
-            sidePos,
-            Utils.getCurrentTimeSeconds(),
-            sideStdDev
-        )
-        driveSubsystem.addVisionMeasurement(
-            frontPos,
-            Utils.getCurrentTimeSeconds(),
-            frontStdDev
-        )
+        if (sideStdDev != null) {
+            driveSubsystem.addVisionMeasurement(
+                sidePos,
+                Utils.getCurrentTimeSeconds(),
+                sideStdDev
+            )
+        }
+
+        if (frontStdDev != null) {
+            driveSubsystem.addVisionMeasurement(
+                frontPos,
+                Utils.getCurrentTimeSeconds(),
+                frontStdDev
+            )
+        }
     }
 }
