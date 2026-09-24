@@ -53,9 +53,7 @@ class Robot : TimedRobot() {
     }
 
     override fun teleopPeriodic() {
-        VisionSubsystem.update()
-
-        println("pose: ${robotContainer.drivetrainSubsystem.state.Pose}")
+        //VisionSubsystem.update()
     }
 
     override fun teleopExit() {}

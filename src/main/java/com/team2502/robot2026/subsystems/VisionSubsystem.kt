@@ -15,8 +15,8 @@ import kotlin.math.pow
 
 
 object VisionSubsystem {
-    fun getVisionPose2d(limelightName: String) : Pose2d {
-        return LimelightHelpers.getBotPose2d(limelightName)
+    fun getVisionPose2d(limelightName: String) : LimelightHelpers.PoseEstimate? {
+        return LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName);
     }
 
     fun getStdDev(limelightName: String) : Matrix<N3, N1>? {
@@ -32,10 +32,17 @@ object VisionSubsystem {
             return null
         } else {
             return VecBuilder.fill(
-                distAreaModifier,
-                distAreaModifier,
-                stdDev[5]
+                0.05,
+                0.05,
+                0.05,
             );
+
+            // TODO: think about this lol
+//            return VecBuilder.fill(
+//                distAreaModifier,
+//                distAreaModifier,
+//                stdDev[5]
+//            );
         }
     }
 
@@ -47,20 +54,24 @@ object VisionSubsystem {
         val sideStdDev = getStdDev(LIMELIGHT_SIDE_NAME)
         val frontStdDev = getStdDev(LIMELIGHT_FRONT_NAME)
 
-        if (sideStdDev != null) {
-            driveSubsystem.addVisionMeasurement(
-                sidePos,
-                Utils.getCurrentTimeSeconds(),
-                sideStdDev
-            )
+        if (sideStdDev != null && sidePos != null) {
+            if (sidePos.tagCount > 0) {
+                driveSubsystem.addVisionMeasurement(
+                    sidePos.pose,
+                    Utils.fpgaToCurrentTime(sidePos.timestampSeconds),
+                    sideStdDev,
+                    )
+            }
         }
 
-        if (frontStdDev != null) {
-            driveSubsystem.addVisionMeasurement(
-                frontPos,
-                Utils.getCurrentTimeSeconds(),
-                frontStdDev
-            )
+        if (frontStdDev != null && frontPos != null) {
+            if (frontPos.tagCount > 0) {
+                driveSubsystem.addVisionMeasurement(
+                    frontPos.pose,
+                    Utils.fpgaToCurrentTime(frontPos.timestampSeconds),
+                    frontStdDev,
+                    )
+            }
         }
     }
 }

@@ -27,7 +27,7 @@ class ShooterSubsystem : SubsystemBase() {
 
     fun setShooterSpeed(velocity: Double) {
         shooterLeftMotor.setControl(shooterVelocityRequest.withVelocity(velocity))
-        shooterRightMotor.setControl(shooterVelocityRequest.withVelocity(-velocity))
+        shooterRightMotor.setControl(shooterVelocityRequest.withVelocity(velocity))
     }
 
     fun setHoodPosition(position: Double) {

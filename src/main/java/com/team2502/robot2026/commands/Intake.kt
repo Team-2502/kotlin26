@@ -10,6 +10,9 @@ import edu.wpi.first.wpilibj2.command.WaitCommand
 
 fun runIntakeCommand() : Command {
     val intakeSubsystem = RobotContainer.INSTANCE.intakeSubsystem
+
+    println("hello my name is runIntakeCommand")
+
     return runEnd(
         intakeSubsystem::intake,
         intakeSubsystem::stop,
