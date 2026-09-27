@@ -10,10 +10,10 @@ import com.team2502.lib.config.PIDConfig
 import com.team2502.lib.config.RobotCANBus
 
 object RobotCAN {
-    private val DRIVE_MOTOR_CONFIG =
-        MotorConfig(PIDConfig(kP = 0.5), false, NeutralModeValue.Brake)
-    private val TURN_MOTOR_CONFIG =
-        MotorConfig(PIDConfig(kP = 0.5), true, NeutralModeValue.Coast)
+    val DRIVE_MOTOR_CONFIG =
+        MotorConfig(PIDConfig(kP = 0.08), false, NeutralModeValue.Brake)
+    val TURN_MOTOR_CONFIG =
+        MotorConfig(PIDConfig(kP = 40.0), true, NeutralModeValue.Coast)
 
     private val SWERVE_ENCODER_CONFIG =
         EncoderConfig(

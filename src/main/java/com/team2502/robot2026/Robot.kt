@@ -60,6 +60,8 @@ class Robot : TimedRobot() {
 
     override fun testInit() {
         CommandScheduler.getInstance().cancelAll()
+
+
     }
 
     override fun testPeriodic() {}

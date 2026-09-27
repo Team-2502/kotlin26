@@ -54,8 +54,8 @@ class RobotContainer {
         // Drivetrain bindings
         drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
             driveRequest
-                .withVelocityX(-driverLeft.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive forward with negative Y (forward)
-                .withVelocityY(-driverLeft.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive left with negative X (left)
+                .withVelocityX(-driverLeft.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive forward with negative Y (forward)
+                .withVelocityY(-driverLeft.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive left with negative X (left)
                 .withRotationalRate(-driverRight.z * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
         }
 
