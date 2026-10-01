@@ -50,10 +50,37 @@ class Constants {
 
         // Max amount of revolution per frame of turret motor
         const val TURRET_CLAMP: Double = 2.5
+
+        const val ORIGIN_TO_TURRET_CENTER_X_INCHES = 4.0
+        const val ORIGIN_TO_TURRET_CENTER_Y_INCHES = 2.25
     }
 
     object Localization {
         const val LIMELIGHT_SIDE_NAME: String = "limelight-side"
         const val LIMELIGHT_FRONT_NAME: String = "limelight-front"
+    }
+
+    /// Choreo coordinates: blue right is (0,0), towards red is +x
+    object Field {
+        const val HALF_FIELD_WIDTH_METERS = 8.042656 / 2.0 /// y
+        const val HALF_FIELD_LENGTH_METERS = 16.513048 / 2.0 /// x
+
+        const val BLUE_HUB_X_METERS = 4.625594
+        const val BLUE_HUB_Y_METERS = 4.034536
+        const val RED_HUB_X_METERS = 11.915394
+        const val RED_HUB_Y_METERS = 4.034536
+
+        const val RED_TOP_PASS_OFFSET_X_METERS = 2.0
+        const val RED_TOP_PASS_OFFSET_Y_METERS = 2.01
+        const val RED_BOTTOM_PASS_OFFSET_X_METERS = 2.0
+        const val RED_BOTTOM_PASS_OFFSET_Y_METERS = -2.01
+        const val BLUE_TOP_PASS_OFFSET_X_METERS = -2.0
+        const val BLUE_TOP_PASS_OFFSET_Y_METERS = 2.01
+        const val BLUE_BOTTOM_PASS_OFFSET_X_METERS = -2.0
+        const val BLUE_BOTTOM_PASS_OFFSET_Y_METERS = -2.01
+    }
+
+    object Weights {
+        const val COMMANDED_VELOCITY_WEIGHT = 0.65
     }
 }

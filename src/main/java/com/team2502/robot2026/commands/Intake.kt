@@ -1,4 +1,4 @@
-package com.team2502.robot2026.commands;
+package com.team2502.robot2026.commands
 
 import com.team2502.robot2026.Constants.Intake.UNJAM_CYCLE_TIME_SECONDS
 import com.team2502.robot2026.RobotContainer

@@ -6,6 +6,7 @@ package com.team2502.robot2026
 import com.ctre.phoenix6.Utils
 import com.team2502.robot2026.Constants.Localization.LIMELIGHT_FRONT_NAME
 import com.team2502.robot2026.Constants.Localization.LIMELIGHT_SIDE_NAME
+import com.team2502.robot2026.subsystems.TargetingSubsystem
 import com.team2502.robot2026.subsystems.VisionSubsystem
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain.*
@@ -23,6 +24,8 @@ class Robot : TimedRobot() {
     }
 
     override fun robotPeriodic() {
+        VisionSubsystem.update()
+        robotContainer.update()
         CommandScheduler.getInstance().run()
     }
 
@@ -39,9 +42,6 @@ class Robot : TimedRobot() {
     }
 
     override fun autonomousPeriodic() {
-        VisionSubsystem.update()
-
-        print(robotContainer.drivetrainSubsystem.state.Pose)
     }
 
     override fun autonomousExit() {}
@@ -53,7 +53,6 @@ class Robot : TimedRobot() {
     }
 
     override fun teleopPeriodic() {
-        //VisionSubsystem.update()
     }
 
     override fun teleopExit() {}

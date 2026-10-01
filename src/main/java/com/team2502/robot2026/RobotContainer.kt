@@ -10,15 +10,23 @@ import com.team2502.robot2026.Constants.OI
 import com.team2502.robot2026.commands.runIntakeCommand
 import com.team2502.robot2026.commands.runOuttakeCommand
 import com.team2502.robot2026.commands.runUnjamCommand
+import com.team2502.robot2026.commands.setTurretCommand
+import com.team2502.robot2026.commands.shootCommand
 import com.team2502.robot2026.subsystems.IntakeSubsystem
 import com.team2502.robot2026.subsystems.ShooterSubsystem
+import com.team2502.robot2026.subsystems.TargetingSubsystem
 import com.team2502.robot2026.subsystems.TurretSubsystem
 import com.team2502.robot2026.subsystems.VisionSubsystem
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
+import edu.wpi.first.math.geometry.Rotation2d
+import edu.wpi.first.networktables.NetworkTableInstance
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.PI
+import kotlin.math.roundToInt
 
 class RobotContainer {
     // Joystick mappings
@@ -26,11 +34,27 @@ class RobotContainer {
     val driverRight: TMJoystick = TMJoystick(OI.JOYSTICK_DRIVE_RIGHT)
     val operator: TMJoystick = TMJoystick(OI.JOYSTICK_OPERATOR)
 
+    //
+    val networkTablesInstance = NetworkTableInstance.getDefault();
+
+    val poseNT = networkTablesInstance.getTable("poseTable")
+    val xPub = poseNT.getDoubleTopic("xPub").publish()
+    val yPub = poseNT.getDoubleTopic("yPub").publish()
+    val poseArrayPub = poseNT.getDoubleArrayTopic("poseArray").publish()
+
+    val targetingNT = networkTablesInstance.getTable("targetingTable")
+    val targetNamePub = targetingNT.getStringTopic("targetNamePub").publish()
+    val currentZonePub = targetingNT.getStringTopic("currentZonePub").publish()
+
+    val debugNT = networkTablesInstance.getTable("debugTable")
+    val debugSlider = debugNT.getDoubleTopic("debugSlider").getEntry(0.0)
+
     // Subsystems
     val drivetrainSubsystem: CommandSwerveDrivetrain = TunerConstants.createDrivetrain()
     val intakeSubsystem: IntakeSubsystem = IntakeSubsystem()
     val shooterSubsystem: ShooterSubsystem = ShooterSubsystem()
     val turretSubsystem: TurretSubsystem = TurretSubsystem()
+    val targetingSubsystem: TargetingSubsystem = TargetingSubsystem(this) //TODO: this is bad lol
 
     // Swerve Command Setups
     private val driveRequest: SwerveRequest.FieldCentric = SwerveRequest.FieldCentric()
@@ -47,7 +71,7 @@ class RobotContainer {
     // separate from init b/c init needs to execute first
     fun initialize() {
         configureBindings()
-
+        debugSlider.setDefault(0.0)
     }
 
     private fun configureBindings() {
@@ -60,10 +84,22 @@ class RobotContainer {
         }
 
         // Intake Bindings
-        driverRight.trigger().whileTrue(runIntakeCommand())
+        driverLeft.trigger().whileTrue(runIntakeCommand())
         driverRight.leftThumbButton().whileTrue(runOuttakeCommand())
         driverRight.middleThumbButton().whileTrue(runUnjamCommand())
+        driverRight.trigger().whileTrue(shootCommand())
+        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(PI/4.0)))
         // driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())
+    }
+
+    fun update() {
+        targetingSubsystem.update()
+
+        xPub.set(drivetrainSubsystem.state.Pose.x)
+        yPub.set(drivetrainSubsystem.state.Pose.y)
+        targetNamePub.set(targetingSubsystem.currentTarget.name)
+        currentZonePub.set(targetingSubsystem.currentZone.name)
+        poseArrayPub.set(doubleArrayOf(drivetrainSubsystem.state.Pose.x, drivetrainSubsystem.state.Pose.y, 0.0, 0.0, 0.0, 0.0))
     }
 
     val autonomousCommand: Command
