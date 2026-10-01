@@ -1,4 +1,5 @@
 ## revisit
+- [ ] ensure canId in RobotCAN is same as init in TunerConsts
 ---
 ## implement
 - [x] turret move to angle

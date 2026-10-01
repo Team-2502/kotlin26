@@ -7,6 +7,7 @@ import com.ctre.phoenix6.swerve.SwerveModule
 import com.ctre.phoenix6.swerve.SwerveRequest
 import com.team2502.lib.TMJoystick
 import com.team2502.robot2026.Constants.OI
+import com.team2502.robot2026.auto.Autos
 import com.team2502.robot2026.commands.runIntakeCommand
 import com.team2502.robot2026.commands.runOuttakeCommand
 import com.team2502.robot2026.commands.runUnjamCommand
@@ -34,12 +35,13 @@ class RobotContainer {
     val driverRight: TMJoystick = TMJoystick(OI.JOYSTICK_DRIVE_RIGHT)
     val operator: TMJoystick = TMJoystick(OI.JOYSTICK_OPERATOR)
 
-    //
+    // NT Config
     val networkTablesInstance = NetworkTableInstance.getDefault();
 
     val poseNT = networkTablesInstance.getTable("poseTable")
     val xPub = poseNT.getDoubleTopic("xPub").publish()
     val yPub = poseNT.getDoubleTopic("yPub").publish()
+    val zPub = poseNT.getDoubleTopic("zPub").publish()
     val poseArrayPub = poseNT.getDoubleArrayTopic("poseArray").publish()
 
     val targetingNT = networkTablesInstance.getTable("targetingTable")
@@ -88,22 +90,34 @@ class RobotContainer {
         driverRight.leftThumbButton().whileTrue(runOuttakeCommand())
         driverRight.middleThumbButton().whileTrue(runUnjamCommand())
         driverRight.trigger().whileTrue(shootCommand())
-        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(PI/4.0)))
+        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
         // driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())
     }
+
+    // Auto
+    private val autos = Autos(drivetrainSubsystem)
+
 
     fun update() {
         targetingSubsystem.update()
 
         xPub.set(drivetrainSubsystem.state.Pose.x)
         yPub.set(drivetrainSubsystem.state.Pose.y)
+        zPub.set(drivetrainSubsystem.state.Pose.rotation.degrees)
         targetNamePub.set(targetingSubsystem.currentTarget.name)
         currentZonePub.set(targetingSubsystem.currentZone.name)
-        poseArrayPub.set(doubleArrayOf(drivetrainSubsystem.state.Pose.x, drivetrainSubsystem.state.Pose.y, 0.0, 0.0, 0.0, 0.0))
+        poseArrayPub.set(doubleArrayOf(
+            drivetrainSubsystem.state.Pose.x,
+            drivetrainSubsystem.state.Pose.y,
+            drivetrainSubsystem.state.Pose.rotation.degrees,
+            0.0,
+            0.0,
+            0.0)
+        )
     }
 
     val autonomousCommand: Command
-        get() = Commands.print("No autonomous command configured")
+        get() = autos.path().cmd()
 
     // global subsystem access via companion object
     companion object {

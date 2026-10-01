@@ -27,6 +27,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism
 import java.util.*
 import java.util.function.Consumer
 import java.util.function.Supplier
+import choreo.trajectory.SwerveSample
+import edu.wpi.first.math.controller.PIDController
+import com.ctre.phoenix6.swerve.SwerveModule
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -46,6 +49,14 @@ class CommandSwerveDrivetrain : TunerSwerveDrivetrain, Subsystem {
     private val translationCharacterization = SwerveRequest.SysIdSwerveTranslation()
     private val steerCharacterization = SwerveRequest.SysIdSwerveSteerGains()
     private val rotationCharacterization = SwerveRequest.SysIdSwerveRotation()
+
+    private val choreoXController = PIDController(5.0, 0.0, 0.0)
+    private val choreoYController = PIDController(5.0, 0.0, 0.0)
+    private val choreoThetaController = PIDController(5.0, 0.0, 0.0)
+
+    init {
+        choreoThetaController.enableContinuousInput(-Math.PI, Math.PI)
+    }
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private val sysIdRoutineTranslation = SysIdRoutine(
@@ -314,6 +325,41 @@ class CommandSwerveDrivetrain : TunerSwerveDrivetrain, Subsystem {
      */
     override fun samplePoseAt(timestampSeconds: Double): Optional<Pose2d> {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds))
+    }
+
+    fun getPose(): Pose2d {
+        return state.Pose
+    }
+
+    fun resetChoreoPose(pose: Pose2d) {
+        super.resetPose(pose)
+    }
+
+    fun followTrajectory(sample: SwerveSample) {
+        val pose = state.Pose
+
+        val vx = sample.vx + choreoXController.calculate(
+            pose.x,
+            sample.x
+        )
+
+        val vy = sample.vy + choreoYController.calculate(
+            pose.y,
+            sample.y
+        )
+
+        val omega = sample.omega + choreoThetaController.calculate(
+            pose.rotation.radians,
+            sample.heading
+        )
+
+        setControl(
+            SwerveRequest.FieldCentric()
+                .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+                .withVelocityX(vx)
+                .withVelocityY(vy)
+                .withRotationalRate(omega)
+        )
     }
 
     companion object {
