@@ -25,8 +25,8 @@ object VisionSubsystem {
         return LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName);
     }
 
-    private fun calculateStandardDeviation(currentPose: PoseEstimate?, estimate: PoseEstimate): Matrix<N3, N1>? {
-
+    private fun getStdDev(currentPose: Pose2d, limelightEstimate: PoseEstimate?): Matrix<N3, N1>? {
+        val estimate = limelightEstimate ?: return null
 
         val optStdDev =
             Arrays.stream(estimate.rawFiducials)
@@ -59,8 +59,8 @@ object VisionSubsystem {
 
         val sidePos = getVisionPose2d(LIMELIGHT_SIDE_NAME)
         val frontPos = getVisionPose2d(LIMELIGHT_FRONT_NAME)
-        val sideStdDev = getStdDev(LIMELIGHT_SIDE_NAME)
-        val frontStdDev = getStdDev(LIMELIGHT_FRONT_NAME)
+        val sideStdDev = getStdDev(driveSubsystem.getPose(), sidePos)
+        val frontStdDev = getStdDev(driveSubsystem.getPose(), frontPos)
 
         if (sideStdDev != null && sidePos != null) {
             if (sidePos.tagCount > 0) {
