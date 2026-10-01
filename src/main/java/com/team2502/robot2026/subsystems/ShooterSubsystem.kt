@@ -1,8 +1,7 @@
 package com.team2502.robot2026.subsystems
 
-import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.controls.VelocityVoltage
+import com.ctre.phoenix6.controls.VelocityDutyCycle
 import com.team2502.lib.config.create
 import com.team2502.robot2026.Constants
 import com.team2502.robot2026.RobotCAN.HOOD
@@ -19,12 +18,13 @@ class ShooterSubsystem : SubsystemBase() {
     private val shooterHoodMotor = HOOD.create()
     private val rampMotor = RAMP.create()
 
-    private val shooterDutyCycleRequest = DutyCycleOut(0.0)
+    private val shooterVelocityDutyCycleRequest = VelocityDutyCycle(0.0)
     private val shooterPositionRequest = PositionVoltage(0.0)
 
     fun setShooterSpeed(velocity: Double) {
-        shooterLeftMotor.setControl(shooterDutyCycleRequest.withOutput(velocity))
-        shooterRightMotor.setControl(shooterDutyCycleRequest.withOutput(velocity))
+
+        shooterLeftMotor.setControl(shooterVelocityDutyCycleRequest.withVelocity(velocity))
+        shooterRightMotor.setControl(shooterVelocityDutyCycleRequest.withVelocity(velocity))
     }
 
     fun setHoodPosition(position: Double) {

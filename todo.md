@@ -1,17 +1,14 @@
 ## revisit
-- [ ] robotCAN -> commandSwerveDrivetrain?
-- [x] figure out CANBus object things w/ robotCAN
 ---
 ## implement
 - [x] turret move to angle
-  - untested
+  - trying, probably PID or zeroing issue
 - [x] turret zero reading
-  - untested
+  - not going to zero, might be PID?
 ---
 ## abstract
-- [ ] prog dash
-- [ ] drive dash
-- [ ] localization system
+- [x] prog dash
+- [x] localization system (maybe done?)
 - [ ] logging system
 ---
 ## notes
