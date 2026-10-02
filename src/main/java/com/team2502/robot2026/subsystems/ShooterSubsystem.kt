@@ -16,7 +16,7 @@ class ShooterSubsystem : SubsystemBase() {
     private val shooterLeftMotor = SHOOTER_LEFT.create()
     private val shooterRightMotor = SHOOTER_RIGHT.create()
     private val shooterHoodMotor = HOOD.create()
-    private val rampMotor = RAMP.create()
+
 
     private val shooterVelocityDutyCycleRequest = VelocityDutyCycle(0.0)
     private val shooterPositionRequest = PositionVoltage(0.0)

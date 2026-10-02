@@ -3,7 +3,7 @@ package com.team2502.robot2026.commands
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
-import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_X_INCHES
+import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_X
 import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_Y_INCHES
 import com.team2502.robot2026.Constants.Weights.COMMANDED_VELOCITY_WEIGHT
 import com.team2502.robot2026.RobotContainer
@@ -28,7 +28,7 @@ fun shootCommand(): Command {
         val futurePose = currentPose
 
         val vectorToTurretCenter = Translation2d(
-            ORIGIN_TO_TURRET_CENTER_X_INCHES,
+            ORIGIN_TO_TURRET_CENTER_X,
             ORIGIN_TO_TURRET_CENTER_Y_INCHES,
         ).rotateBy(Rotation2d(futurePose.rotation.radians))
         val turretPose = futurePose.translation + vectorToTurretCenter
@@ -65,7 +65,7 @@ fun shootCommand(): Command {
 
         shooterSubsystem.setShooterSpeed(flywheelSpeed)
         shooterSubsystem.setHoodPosition(hood)
-        turretSubsystem.pointTo(angle)
+        turretSubsystem.pointTo(angle - futurePose.rotation)
     }, turretSubsystem, shooterSubsystem)
 }
 

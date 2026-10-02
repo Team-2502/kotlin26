@@ -75,6 +75,7 @@ class RobotContainer {
     // separate from init b/c init needs to execute first
     fun initialize() {
         configureBindings()
+        turretSubsystem.initialize()
         debugSlider.setDefault(0.0)
     }
 
@@ -106,7 +107,6 @@ class RobotContainer {
     // Auto
     private val autos = Autos(drivetrainSubsystem)
 
-
     fun update() {
         targetingSubsystem.update()
 
@@ -123,7 +123,7 @@ class RobotContainer {
             0.0,
             0.0)
         )
-        debugText.set(turretSubsystem.turretZeroPosition.degrees.toString())
+        debugText.set(turretSubsystem.turretZeroPosition?.degrees.toString())
     }
 
     val autonomousCommand: Command

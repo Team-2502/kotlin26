@@ -8,17 +8,20 @@ import com.team2502.robot2026.Constants.Intake.INTAKE_OUT_DUTY_CYCLE
 import com.team2502.robot2026.Constants.Intake.TUNNEL_IN_DUTY_CYCLE
 import com.team2502.robot2026.Constants.Intake.TUNNEL_OUT_DUTY_CYCLE
 import com.team2502.robot2026.RobotCAN.INTAKE
+import com.team2502.robot2026.RobotCAN.RAMP
 import com.team2502.robot2026.RobotCAN.TUNNEL
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 
 class IntakeSubsystem : SubsystemBase() {
     private val intakeMotor = INTAKE.create()
     private val tunnelMotor = TUNNEL.create()
+    private val rampMotor = RAMP.create()
     private val intakeDutyCycleRequest = DutyCycleOut(0.0)
 
     private fun setDutyCycle(dutyCycleIntake: Double, dutyCycleTunnel: Double) {
         intakeMotor.setControl(intakeDutyCycleRequest.withOutput(dutyCycleIntake))
         tunnelMotor.setControl(intakeDutyCycleRequest.withOutput(dutyCycleTunnel))
+        rampMotor.setControl(intakeDutyCycleRequest.withOutput(0.3))
     }
 
     fun intake() {

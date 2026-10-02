@@ -21,11 +21,11 @@ data class CANConfig<C : DeviceConfig<*>>(
 
 }
 
-fun CANConfig<MotorConfig>.create() = TalonFX(canId).apply {
+fun CANConfig<MotorConfig>.create() = TalonFX(canId, bus.instance).apply {
     this.configurator.apply(config.generate())
 }
 
-fun CANConfig<EncoderConfig>.create() = CANcoder(canId).apply {
+fun CANConfig<EncoderConfig>.create() = CANcoder(canId, bus.instance).apply {
     this.configurator.apply(config.generate())
 }
 

@@ -58,7 +58,7 @@ object RobotCAN {
         22,
         "Ramp",
         RobotCANBus.RIO,
-        MotorConfig(PIDConfig(), ccwp = true, neutralMode = NeutralModeValue.Brake))
+        MotorConfig(PIDConfig(), ccwp = false, neutralMode = NeutralModeValue.Brake))
 
     private val SHOOTER_PID_CONFIG = PIDConfig(kP = 0.03, kI = 0.12)
 

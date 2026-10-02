@@ -51,8 +51,8 @@ class Constants {
         // Max amount of revolution per frame of turret motor
         const val TURRET_CLAMP: Double = 2.5
 
-        const val ORIGIN_TO_TURRET_CENTER_X_INCHES = 4.0
-        const val ORIGIN_TO_TURRET_CENTER_Y_INCHES = 2.25
+        const val ORIGIN_TO_TURRET_CENTER_X = 0.1016
+        const val ORIGIN_TO_TURRET_CENTER_Y_INCHES = 0.05715
     }
 
     object Localization {

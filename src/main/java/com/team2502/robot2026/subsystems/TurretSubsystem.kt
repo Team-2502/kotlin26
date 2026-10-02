@@ -1,8 +1,6 @@
 package com.team2502.robot2026.subsystems
 
 import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.hardware.CANcoder
-import com.ctre.phoenix6.hardware.TalonFX
 import com.team2502.lib.FileZero
 import com.team2502.lib.config.create
 import com.team2502.robot2026.Constants.Turret.ABS_TO_RELATIVE_RATIO
@@ -13,10 +11,8 @@ import com.team2502.robot2026.RobotCAN.TURRET
 import com.team2502.robot2026.RobotCAN.TURRET_ENCODER
 import edu.wpi.first.math.MathUtil.angleModulus
 import edu.wpi.first.math.geometry.Rotation2d
-import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import java.io.File
-import java.io.IOException
 
 class TurretSubsystem : SubsystemBase() {
     private val turretMotor = TURRET.create()
@@ -24,15 +20,15 @@ class TurretSubsystem : SubsystemBase() {
 
     private val turretPositionRequest = PositionVoltage(0.0)
 
-    val turretZeroPosition: Rotation2d
+    var turretZeroPosition: Rotation2d? = null
 
-    init {
+    fun initialize() {
         turretZeroPosition = Rotation2d.fromRotations(FileZero(
             File("/tmp/turret_zero"),
             {
                 turretMotor.position.valueAsDouble +
-                (turretEncoder.absolutePosition.valueAsDouble - TURRET_ABSOLUTE_ENCODER_ZERO_ROTATIONS) *
-                ABS_TO_RELATIVE_RATIO
+                        (turretEncoder.absolutePosition.valueAsDouble - TURRET_ABSOLUTE_ENCODER_ZERO_ROTATIONS) *
+                        ABS_TO_RELATIVE_RATIO
             }
         ))
     }
@@ -43,11 +39,17 @@ class TurretSubsystem : SubsystemBase() {
 
     /** points turret to a ROBOT relative angle, with 0 being away from intake **/
     fun pointTo(angle: Rotation2d) {
+        val turretZero = this.turretZeroPosition
+        if (turretZero == null) {
+            print("[WARNING]: turretZeroPosition was null when pointTo was called")
+            return
+        }
+
         val currentPositon = turretMotor.position.valueAsDouble
 
         val wrappedAngle = Rotation2d(angleModulus(angle.radians))
         val targetPosition =
-            ((wrappedAngle.rotations * MOTOR_TO_TURRET_RATIO) + turretZeroPosition.rotations)
+            ((wrappedAngle.rotations * MOTOR_TO_TURRET_RATIO) + turretZero.rotations)
                 .coerceIn(currentPositon - TURRET_CLAMP, currentPositon + TURRET_CLAMP)
         setTurretPosition(targetPosition)
     }
