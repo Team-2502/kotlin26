@@ -15,27 +15,6 @@ object RobotCAN {
     val TURN_MOTOR_CONFIG =
         MotorConfig(PIDConfig(kP = 40.0), true, NeutralModeValue.Coast)
 
-    private val SWERVE_ENCODER_CONFIG =
-        EncoderConfig(
-            sensorDirection = SensorDirectionValue.CounterClockwise_Positive,
-            absoluteSensorDiscontinuityPoint = 1.0,
-        )
-
-    val FRONT_LEFT_DRIVE = CANConfig(2, "Front Left Drive", RobotCANBus.RIO, DRIVE_MOTOR_CONFIG)
-    val FRONT_RIGHT_DRIVE = CANConfig(11, "Front Right Drive", RobotCANBus.RIO, DRIVE_MOTOR_CONFIG)
-    val BACK_LEFT_DRIVE = CANConfig(5, "Back Left Drive", RobotCANBus.RIO, DRIVE_MOTOR_CONFIG)
-    val BACK_RIGHT_DRIVE = CANConfig(8, "Back Right Drive", RobotCANBus.RIO, DRIVE_MOTOR_CONFIG)
-
-    val FRONT_LEFT_TURN = CANConfig(canId = 3, name = "Front Left Turn", RobotCANBus.RIO, TURN_MOTOR_CONFIG)
-    val FRONT_RIGHT_TURN = CANConfig(canId = 12, name = "Front Right Turn", RobotCANBus.RIO, TURN_MOTOR_CONFIG)
-    val BACK_LEFT_TURN = CANConfig(canId = 6, name = "Back Left Turn", RobotCANBus.RIO, TURN_MOTOR_CONFIG)
-    val BACK_RIGHT_TURN = CANConfig(canId = 9, name = "Back Right Turn", RobotCANBus.RIO, TURN_MOTOR_CONFIG)
-
-    val FRONT_LEFT_ENCODER = CANConfig(canId = 1, name = "Front Left Encoder", RobotCANBus.RIO, SWERVE_ENCODER_CONFIG)
-    val FRONT_RIGHT_ENCODER = CANConfig(canId = 10, name = "Front Right Encoder", RobotCANBus.RIO, SWERVE_ENCODER_CONFIG)
-    val BACK_LEFT_ENCODER = CANConfig(canId = 4, name = "Back Left Encoder", RobotCANBus.RIO, SWERVE_ENCODER_CONFIG)
-    val BACK_RIGHT_ENCODER = CANConfig(canId = 7, name = "Back Right Encoder", RobotCANBus.RIO, SWERVE_ENCODER_CONFIG)
-
     val INTAKE = CANConfig(
         18,
         "Intake",

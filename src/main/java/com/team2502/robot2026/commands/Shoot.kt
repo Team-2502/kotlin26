@@ -4,7 +4,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
 import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_X
-import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_Y_INCHES
+import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_Y
 import com.team2502.robot2026.Constants.Weights.COMMANDED_VELOCITY_WEIGHT
 import com.team2502.robot2026.RobotContainer
 import edu.wpi.first.math.geometry.Pose2d
@@ -29,7 +29,7 @@ fun shootCommand(): Command {
 
         val vectorToTurretCenter = Translation2d(
             ORIGIN_TO_TURRET_CENTER_X,
-            ORIGIN_TO_TURRET_CENTER_Y_INCHES,
+            ORIGIN_TO_TURRET_CENTER_Y,
         ).rotateBy(Rotation2d(futurePose.rotation.radians))
         val turretPose = futurePose.translation + vectorToTurretCenter
 
@@ -45,7 +45,7 @@ fun shootCommand(): Command {
         // target-relative = tr
         val trVelocity = targetRelativeVelocity(weightedVelocity, futurePose, target.position.translation)
         val currentDist = currentPose.translation.getDistance(target.position.translation)
-        val futureDist = futurePose.translation.getDistance(target.position.translation)
+        val futureDist = turretPose.getDistance(target.position.translation)
 
         val flywheelSpeed: Double
         val hood: Double

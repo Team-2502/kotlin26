@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.jvm.optionals.getOrDefault
 import kotlin.math.PI
 import kotlin.math.roundToInt
 
@@ -81,19 +82,26 @@ class RobotContainer {
 
     fun configureBindings() {
         // Drivetrain bindings
-            drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
-                if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-                    driveRequest
-                        .withVelocityX(-driverLeft.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive forward with negative Y (forward)
-                        .withVelocityY(driverLeft.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive left with negative X (left)
-                        .withRotationalRate(-driverRight.z * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
-                } else {
-                    driveRequest
-                        .withVelocityX(driverLeft.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive forward with negative Y (forward)
-                        .withVelocityY(-driverLeft.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive left with negative X (left)
-                        .withRotationalRate(-driverRight.z * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
-                }
+        drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
+            val alliance = DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue)
+            var velX: Double
+            var velY: Double
+            val rotationRate = -driverRight.z
+            if (alliance == DriverStation.Alliance.Red) {
+                velX = -driverLeft.y
+                velY = driverLeft.x
+            } else {
+                velX = driverLeft.y
+                velY = -driverLeft.x
             }
+            SwerveRequest.FieldCentric()
+                .withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
+                .withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
+                .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+                .withVelocityX(velX * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND)
+                .withVelocityY(velY * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND)
+                .withRotationalRate(rotationRate * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
+        }
 
         // Intake Bindings
         driverLeft.trigger().whileTrue(runIntakeCommand())
@@ -115,13 +123,15 @@ class RobotContainer {
         zPub.set(drivetrainSubsystem.state.Pose.rotation.degrees)
         targetNamePub.set(targetingSubsystem.currentTarget.name)
         currentZonePub.set(targetingSubsystem.currentZone.name)
-        poseArrayPub.set(doubleArrayOf(
-            drivetrainSubsystem.state.Pose.x,
-            drivetrainSubsystem.state.Pose.y,
-            drivetrainSubsystem.state.Pose.rotation.degrees,
-            0.0,
-            0.0,
-            0.0)
+        poseArrayPub.set(
+            doubleArrayOf(
+                drivetrainSubsystem.state.Pose.x,
+                drivetrainSubsystem.state.Pose.y,
+                drivetrainSubsystem.state.Pose.rotation.degrees,
+                0.0,
+                0.0,
+                0.0
+            )
         )
         debugText.set(turretSubsystem.turretZeroPosition?.degrees.toString())
     }
@@ -133,7 +143,11 @@ class RobotContainer {
     companion object {
         private val INSTANCE_CONTAINER = AtomicReference<RobotContainer>()
         var INSTANCE: RobotContainer
-            set(value) { INSTANCE_CONTAINER.set(value) }
-            get() { return INSTANCE_CONTAINER.get() }
+            set(value) {
+                INSTANCE_CONTAINER.set(value)
+            }
+            get() {
+                return INSTANCE_CONTAINER.get()
+            }
     }
 }

@@ -24,7 +24,7 @@ import kotlin.math.pow
 object VisionSubsystem {
     private var previousEstimateTimestamp = 0.0
 
-    fun getVisionPose2d(limelightName: String) : PoseEstimate? {
+    fun getVisionPose2d(limelightName: String): PoseEstimate? {
         return LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName);
     }
 
@@ -46,7 +46,7 @@ object VisionSubsystem {
         if (closestTagDist < 1) closestTagDist = 1.0
 
         val distanceToCurrentSTD: Double = currentPose.translation
-                .getDistance(estimate.pose.translation)
+            .getDistance(estimate.pose.translation)
 
         stdDev =
             ((CHASSIS_XY_STDDEV_COEFFICIENT
@@ -54,8 +54,7 @@ object VisionSubsystem {
                     / estimate.tagCount
                     + DEFAULT_XY_STDDEV) / 10.0
 
-//        return VecBuilder.fill(stdDev, stdDev, headingStdDev)
-        return VecBuilder.fill(0.05, 0.05, 0.05)
+        return VecBuilder.fill(stdDev, stdDev, headingStdDev)
     }
 
     fun update() {

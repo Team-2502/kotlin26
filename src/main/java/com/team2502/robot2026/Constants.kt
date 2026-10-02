@@ -13,14 +13,6 @@ class Constants {
     object Drivetrain {
         const val MEASURED_MAX_SPEED_METERS_PER_SECOND: Double = 4.58
         const val MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND: Double = 2 * 3.1415
-
-        const val DRIVE_MOTOR_KP: Double = 0.25
-        const val DRIVE_MOTOR_KI: Double = 0.0
-        const val DRIVE_MOTOR_KD: Double = 0.0
-
-        const val TURN_MOTOR_KP: Double = 0.0
-        const val TURN_MOTOR_KI: Double = 0.0
-        const val TURN_MOTOR_KD: Double = 0.0
     }
 
     object Intake {
@@ -28,6 +20,8 @@ class Constants {
         const val INTAKE_OUT_DUTY_CYCLE: Double = -1.0
         const val TUNNEL_IN_DUTY_CYCLE: Double = 1.0
         const val TUNNEL_OUT_DUTY_CYCLE: Double = -1.0
+        const val RAMP_IN_DUTY_CYCLE: Double = 0.3
+        const val RAMP_OUT_DUTY_CYCLE: Double = -0.3
 
         const val UNJAM_CYCLE_TIME_SECONDS: Double = 0.25
     }
@@ -52,7 +46,7 @@ class Constants {
         const val TURRET_CLAMP: Double = 2.5
 
         const val ORIGIN_TO_TURRET_CENTER_X = 0.1016
-        const val ORIGIN_TO_TURRET_CENTER_Y_INCHES = 0.05715
+        const val ORIGIN_TO_TURRET_CENTER_Y = 0.05715
     }
 
     object Localization {

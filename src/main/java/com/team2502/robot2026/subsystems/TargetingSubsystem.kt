@@ -90,13 +90,13 @@ class TargetingSubsystem(private val robotContainer: RobotContainer) {
         currentZone = if (pose.y < HALF_FIELD_WIDTH_METERS) {
             when {
                 pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
-                (BLUE_HUB_X_METERS < pose.x && pose.x < RED_HUB_X_METERS) -> Zone.MIDDLE_BOTTOM
+                pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
                 else -> Zone.RED_BOTTOM
             }
         } else {
             when {
                 pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_TOP
-                (BLUE_HUB_X_METERS < pose.x && pose.x < RED_HUB_X_METERS) -> Zone.MIDDLE_TOP
+                pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_TOP
                 else -> Zone.RED_TOP
             }
         }

@@ -5,6 +5,8 @@ import com.team2502.lib.config.create
 import com.team2502.robot2026.Constants
 import com.team2502.robot2026.Constants.Intake.INTAKE_IN_DUTY_CYCLE
 import com.team2502.robot2026.Constants.Intake.INTAKE_OUT_DUTY_CYCLE
+import com.team2502.robot2026.Constants.Intake.RAMP_IN_DUTY_CYCLE
+import com.team2502.robot2026.Constants.Intake.RAMP_OUT_DUTY_CYCLE
 import com.team2502.robot2026.Constants.Intake.TUNNEL_IN_DUTY_CYCLE
 import com.team2502.robot2026.Constants.Intake.TUNNEL_OUT_DUTY_CYCLE
 import com.team2502.robot2026.RobotCAN.INTAKE
@@ -18,22 +20,31 @@ class IntakeSubsystem : SubsystemBase() {
     private val rampMotor = RAMP.create()
     private val intakeDutyCycleRequest = DutyCycleOut(0.0)
 
-    private fun setDutyCycle(dutyCycleIntake: Double, dutyCycleTunnel: Double) {
+    private fun setDutyCycle(dutyCycleIntake: Double, dutyCycleTunnel: Double, dutyCycleRamp: Double) {
         intakeMotor.setControl(intakeDutyCycleRequest.withOutput(dutyCycleIntake))
         tunnelMotor.setControl(intakeDutyCycleRequest.withOutput(dutyCycleTunnel))
-        rampMotor.setControl(intakeDutyCycleRequest.withOutput(0.3))
+        rampMotor.setControl(intakeDutyCycleRequest.withOutput(dutyCycleRamp))
     }
 
     fun intake() {
-        setDutyCycle(INTAKE_IN_DUTY_CYCLE, TUNNEL_IN_DUTY_CYCLE)
+        setDutyCycle(
+            INTAKE_IN_DUTY_CYCLE,
+            TUNNEL_IN_DUTY_CYCLE,
+            RAMP_IN_DUTY_CYCLE
+        )
     }
 
     fun outtake() {
-        setDutyCycle(INTAKE_OUT_DUTY_CYCLE, TUNNEL_OUT_DUTY_CYCLE)
+        setDutyCycle(
+            INTAKE_OUT_DUTY_CYCLE,
+            TUNNEL_OUT_DUTY_CYCLE,
+            RAMP_OUT_DUTY_CYCLE
+        )
     }
 
     fun stop() {
         intakeMotor.stopMotor()
         tunnelMotor.stopMotor()
+        rampMotor.stopMotor()
     }
 }

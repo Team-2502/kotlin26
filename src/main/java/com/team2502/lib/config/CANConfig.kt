@@ -4,7 +4,6 @@ import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.hardware.TalonFX
-import com.team2502.robot2026.RobotCAN.GYRO
 
 enum class RobotCANBus(val instance: CANBus) {
     RIO (CANBus.roboRIO()),
@@ -29,6 +28,6 @@ fun CANConfig<EncoderConfig>.create() = CANcoder(canId, bus.instance).apply {
     this.configurator.apply(config.generate())
 }
 
-fun CANConfig<GyroConfig>.create() = Pigeon2(GYRO.canId, bus.instance).apply {
+fun CANConfig<GyroConfig>.create() = Pigeon2(canId, bus.instance).apply {
     this.configurator.apply(config.generate())
 }
