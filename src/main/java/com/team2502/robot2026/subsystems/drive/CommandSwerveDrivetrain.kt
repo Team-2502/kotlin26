@@ -30,6 +30,7 @@ import java.util.function.Supplier
 import choreo.trajectory.SwerveSample
 import edu.wpi.first.math.controller.PIDController
 import com.ctre.phoenix6.swerve.SwerveModule
+import com.team2502.robot2026.RobotContainer
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -335,7 +336,7 @@ class CommandSwerveDrivetrain : TunerSwerveDrivetrain, Subsystem {
     }
 
     fun followTrajectory(sample: SwerveSample) {
-        val pose = state.Pose
+        val pose = RobotContainer.INSTANCE.getPose()
 
         val vx = sample.vx + choreoXController.calculate(
             pose.x,

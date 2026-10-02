@@ -20,8 +20,8 @@ class Constants {
         const val INTAKE_OUT_DUTY_CYCLE: Double = -1.0
         const val TUNNEL_IN_DUTY_CYCLE: Double = 1.0
         const val TUNNEL_OUT_DUTY_CYCLE: Double = -1.0
-        const val RAMP_IN_DUTY_CYCLE: Double = 0.3
-        const val RAMP_OUT_DUTY_CYCLE: Double = -0.3
+        const val RAMP_IN_DUTY_CYCLE: Double = 0.5
+        const val RAMP_OUT_DUTY_CYCLE: Double = -0.5
 
         const val UNJAM_CYCLE_TIME_SECONDS: Double = 0.25
     }
@@ -76,6 +76,7 @@ class Constants {
 
     object Weights {
         const val COMMANDED_VELOCITY_WEIGHT = 0.65
+        const val GYRO_EMA_WEIGHT = 0.01
 
         const val CHASSIS_XY_STDDEV_COEFFICIENT = 0.04
         const val DEFAULT_XY_STDDEV = 0.25

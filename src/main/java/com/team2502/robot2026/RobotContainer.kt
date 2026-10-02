@@ -7,11 +7,13 @@ import com.ctre.phoenix6.swerve.SwerveModule
 import com.ctre.phoenix6.swerve.SwerveRequest
 import com.team2502.lib.TMJoystick
 import com.team2502.robot2026.Constants.OI
+import com.team2502.robot2026.Constants.Weights.GYRO_EMA_WEIGHT
 import com.team2502.robot2026.auto.Autos
 import com.team2502.robot2026.commands.runIntakeCommand
 import com.team2502.robot2026.commands.runOuttakeCommand
 import com.team2502.robot2026.commands.runUnjamCommand
 import com.team2502.robot2026.commands.setTurretCommand
+import com.team2502.robot2026.commands.setTurretFieldAngleCommand
 import com.team2502.robot2026.commands.shootCommand
 import com.team2502.robot2026.subsystems.IntakeSubsystem
 import com.team2502.robot2026.subsystems.ShooterSubsystem
@@ -20,16 +22,13 @@ import com.team2502.robot2026.subsystems.TurretSubsystem
 import com.team2502.robot2026.subsystems.VisionSubsystem
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
+import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.Commands
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.jvm.optionals.getOrDefault
-import kotlin.math.PI
-import kotlin.math.roundToInt
 
 class RobotContainer {
     // Joystick mappings
@@ -61,13 +60,6 @@ class RobotContainer {
     val turretSubsystem: TurretSubsystem = TurretSubsystem()
     val targetingSubsystem: TargetingSubsystem = TargetingSubsystem(this) //TODO: this is bad lol
 
-    // Swerve Command Setups
-    private val driveRequest: SwerveRequest.FieldCentric = SwerveRequest.FieldCentric()
-        .withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
-        .withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
-        .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
-
-
     // setup for global subsystem access
     init {
         INSTANCE = this
@@ -77,6 +69,8 @@ class RobotContainer {
     fun initialize() {
         configureBindings()
         turretSubsystem.initialize()
+        shooterSubsystem.initialize()
+
         debugSlider.setDefault(0.0)
     }
 
@@ -109,6 +103,7 @@ class RobotContainer {
         driverRight.middleThumbButton().whileTrue(runUnjamCommand())
         driverRight.trigger().whileTrue(shootCommand())
         driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
+        driverLeft.rightThumbButton().whileTrue(setTurretFieldAngleCommand(Rotation2d(0.0)))
         // driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())
     }
 
@@ -118,22 +113,24 @@ class RobotContainer {
     fun update() {
         targetingSubsystem.update()
 
-        xPub.set(drivetrainSubsystem.state.Pose.x)
-        yPub.set(drivetrainSubsystem.state.Pose.y)
-        zPub.set(drivetrainSubsystem.state.Pose.rotation.degrees)
+        val pose = INSTANCE.getPose()
+
+        xPub.set(pose.x)
+        yPub.set(pose.y)
+        zPub.set(pose.rotation.degrees)
         targetNamePub.set(targetingSubsystem.currentTarget.name)
         currentZonePub.set(targetingSubsystem.currentZone.name)
         poseArrayPub.set(
             doubleArrayOf(
-                drivetrainSubsystem.state.Pose.x,
-                drivetrainSubsystem.state.Pose.y,
-                drivetrainSubsystem.state.Pose.rotation.degrees,
+                pose.x,
+                pose.y,
+                pose.rotation.degrees,
                 0.0,
                 0.0,
                 0.0
             )
         )
-        debugText.set(turretSubsystem.turretZeroPosition?.degrees.toString())
+        debugText.set(getYaw().toString())
     }
 
     val autonomousCommand: Command
@@ -149,5 +146,14 @@ class RobotContainer {
             get() {
                 return INSTANCE_CONTAINER.get()
             }
+    }
+
+    fun getPose(): Pose2d {
+        val ret = drivetrainSubsystem.getPose()
+        return Pose2d(ret.x, ret.y, getYaw())
+    }
+
+    private fun getYaw(): Rotation2d {
+        return Rotation2d.fromDegrees(drivetrainSubsystem.pigeon2.yaw.valueAsDouble) + VisionSubsystem.pigeonZero
     }
 }

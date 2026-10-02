@@ -20,7 +20,7 @@ fun shootCommand(): Command {
     val targetingSubsystem = RobotContainer.INSTANCE.targetingSubsystem
 
     return Commands.run({
-        val currentPose = driveSubsystem.state.Pose
+        val currentPose = RobotContainer.INSTANCE.getPose()
         val target = targetingSubsystem.currentTarget
         val currentFlywheelSpeed = shooterSubsystem.flywheelSpeed()
 

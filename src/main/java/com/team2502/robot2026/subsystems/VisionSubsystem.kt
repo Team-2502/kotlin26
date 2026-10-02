@@ -8,12 +8,14 @@ import com.team2502.robot2026.Constants.Localization.LIMELIGHT_FRONT_NAME
 import com.team2502.robot2026.Constants.Localization.LIMELIGHT_SIDE_NAME
 import com.team2502.robot2026.Constants.Weights.CHASSIS_XY_STDDEV_COEFFICIENT
 import com.team2502.robot2026.Constants.Weights.DEFAULT_XY_STDDEV
+import com.team2502.robot2026.Constants.Weights.GYRO_EMA_WEIGHT
 import com.team2502.robot2026.RobotContainer
 import com.team2502.robot2026.subsystems.VisionSubsystem.previousEstimateTimestamp
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.Vector
 import edu.wpi.first.math.geometry.Pose2d
+import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
 import edu.wpi.first.wpilibj.Timer;
@@ -23,6 +25,9 @@ import kotlin.math.pow
 
 object VisionSubsystem {
     private var previousEstimateTimestamp = 0.0
+
+    var pigeonZero = Rotation2d(0.0)
+    var pigeonSet = false
 
     fun getVisionPose2d(limelightName: String): PoseEstimate? {
         return LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName);
@@ -58,11 +63,10 @@ object VisionSubsystem {
     }
 
     fun update() {
-        val driveSubsystem = RobotContainer.INSTANCE.drivetrainSubsystem
         val sidePos = getVisionPose2d(LIMELIGHT_SIDE_NAME)
         val frontPos = getVisionPose2d(LIMELIGHT_FRONT_NAME)
-        val sideStdDev = getStdDev(driveSubsystem.getPose(), sidePos)
-        val frontStdDev = getStdDev(driveSubsystem.getPose(), frontPos)
+        val sideStdDev = getStdDev(RobotContainer.INSTANCE.getPose(), sidePos)
+        val frontStdDev = getStdDev(RobotContainer.INSTANCE.getPose(), frontPos)
 
         //TODO: check which limelight updates first
         addToFilter(sidePos, sideStdDev)
@@ -73,6 +77,14 @@ object VisionSubsystem {
         if (stdDev != null && pose != null) {
             if (pose.tagCount > 0) {
                 if (pose.timestampSeconds > previousEstimateTimestamp) {
+                    val currentOffset = pose.pose.rotation - Rotation2d.fromDegrees(RobotContainer.INSTANCE.drivetrainSubsystem.pigeon2.yaw.valueAsDouble)
+                    if (pigeonSet) {
+                        pigeonZero += currentOffset.minus(pigeonZero) * GYRO_EMA_WEIGHT
+                    } else {
+                        pigeonZero = pose.pose.rotation
+                        pigeonSet = true
+                    }
+
                     previousEstimateTimestamp = pose.timestampSeconds
                     RobotContainer.INSTANCE.drivetrainSubsystem.addVisionMeasurement(
                         pose.pose,

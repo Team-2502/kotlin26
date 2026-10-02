@@ -9,3 +9,8 @@ fun setTurretCommand(angle: Rotation2d): Command {
     val turretSubsystem = RobotContainer.INSTANCE.turretSubsystem
     return Commands.run({turretSubsystem.pointTo(angle)}, turretSubsystem)
 }
+
+fun setTurretFieldAngleCommand(angle: Rotation2d): Command {
+    val turretSubsystem = RobotContainer.INSTANCE.turretSubsystem
+    return Commands.run({turretSubsystem.pointTo(angle - RobotContainer.INSTANCE.getPose().rotation)}, turretSubsystem)
+}
