@@ -27,7 +27,7 @@ class TurretSubsystem : SubsystemBase() {
     val turretZeroPosition: Rotation2d
 
     init {
-        turretZeroPosition = Rotation2d.fromDegrees(FileZero(
+        turretZeroPosition = Rotation2d.fromRotations(FileZero(
             File("/tmp/turret_zero"),
             {
                 turretMotor.position.valueAsDouble +
