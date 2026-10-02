@@ -22,6 +22,7 @@ import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.networktables.NetworkTableInstance
+import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
@@ -50,6 +51,7 @@ class RobotContainer {
 
     val debugNT = networkTablesInstance.getTable("debugTable")
     val debugSlider = debugNT.getDoubleTopic("debugSlider").getEntry(0.0)
+    val debugText = debugNT.getStringTopic("debugText").publish()
 
     // Subsystems
     val drivetrainSubsystem: CommandSwerveDrivetrain = TunerConstants.createDrivetrain()
@@ -76,14 +78,21 @@ class RobotContainer {
         debugSlider.setDefault(0.0)
     }
 
-    private fun configureBindings() {
+    fun configureBindings() {
         // Drivetrain bindings
-        drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
-            driveRequest
-                .withVelocityX(-driverLeft.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive forward with negative Y (forward)
-                .withVelocityY(-driverLeft.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive left with negative X (left)
-                .withRotationalRate(-driverRight.z * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
-        }
+            drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
+                if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+                    driveRequest
+                        .withVelocityX(-driverLeft.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive forward with negative Y (forward)
+                        .withVelocityY(driverLeft.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive left with negative X (left)
+                        .withRotationalRate(-driverRight.z * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
+                } else {
+                    driveRequest
+                        .withVelocityX(driverLeft.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive forward with negative Y (forward)
+                        .withVelocityY(-driverLeft.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND) // Drive left with negative X (left)
+                        .withRotationalRate(-driverRight.z * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
+                }
+            }
 
         // Intake Bindings
         driverLeft.trigger().whileTrue(runIntakeCommand())
@@ -114,6 +123,7 @@ class RobotContainer {
             0.0,
             0.0)
         )
+        debugText.set(turretSubsystem.turretZeroPosition.degrees.toString())
     }
 
     val autonomousCommand: Command

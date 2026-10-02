@@ -50,6 +50,8 @@ class Robot : TimedRobot() {
         if (autonomousCommand != null) {
             autonomousCommand!!.cancel()
         }
+
+        robotContainer.configureBindings()
     }
 
     override fun teleopPeriodic() {

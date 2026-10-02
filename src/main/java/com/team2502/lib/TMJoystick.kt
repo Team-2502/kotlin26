@@ -78,7 +78,7 @@ class TMJoystick(port: Int) : CommandJoystick(port) {
     }
 
     override fun getY(): Double {
-        return getRawAxis(1)
+        return -getRawAxis(1)
     }
 
     override fun getTwist(): Double {

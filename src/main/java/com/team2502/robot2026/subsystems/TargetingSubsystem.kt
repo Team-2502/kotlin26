@@ -91,7 +91,7 @@ class TargetingSubsystem(private val robotContainer: RobotContainer) {
             when {
                 pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
                 (BLUE_HUB_X_METERS < pose.x && pose.x < RED_HUB_X_METERS) -> Zone.MIDDLE_BOTTOM
-                else -> Zone.RED_TOP
+                else -> Zone.RED_BOTTOM
             }
         } else {
             when {

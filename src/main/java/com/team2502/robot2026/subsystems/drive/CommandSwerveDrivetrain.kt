@@ -218,7 +218,6 @@ class CommandSwerveDrivetrain : TunerSwerveDrivetrain, Subsystem {
      * @return Command to run
      */
     fun applyRequest(request: Supplier<SwerveRequest>): Command {
-        println("hello")
         return run(Runnable { this.setControl(request.get()) })
     }
 

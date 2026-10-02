@@ -46,7 +46,7 @@ object RobotCAN {
         16,
         "Turret",
         RobotCANBus.RIO,
-        MotorConfig(PIDConfig(kP = 0.5, kI = 2.5), ccwp = true, neutralMode = NeutralModeValue.Brake))
+        MotorConfig(PIDConfig(kP = 8.0, kI = 2.5), ccwp = true, neutralMode = NeutralModeValue.Brake))
 
     val TUNNEL = CANConfig(
         21,

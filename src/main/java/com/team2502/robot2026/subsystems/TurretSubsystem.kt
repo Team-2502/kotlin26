@@ -24,7 +24,7 @@ class TurretSubsystem : SubsystemBase() {
 
     private val turretPositionRequest = PositionVoltage(0.0)
 
-    private val turretZeroPosition: Rotation2d
+    val turretZeroPosition: Rotation2d
 
     init {
         turretZeroPosition = Rotation2d.fromDegrees(FileZero(
