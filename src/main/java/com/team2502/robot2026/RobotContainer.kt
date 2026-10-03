@@ -80,14 +80,10 @@ class RobotContainer {
             val alliance = DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue)
             var velX: Double
             var velY: Double
-            val rotationRate = driverRight.z
-            if (alliance == DriverStation.Alliance.Red) {
-                velX = -driverLeft.y
-                velY = driverLeft.x
-            } else {
-                velX = driverLeft.y
-                velY = -driverLeft.x
-            }
+            val rotationRate = -driverRight.z
+            // NEEDS TO RENABLE TELEOP FOR ALLIANCE TO FLIP
+            velX = driverLeft.y
+            velY = -driverLeft.x
             SwerveRequest.FieldCentric()
                 .withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
                 .withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
