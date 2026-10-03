@@ -24,52 +24,52 @@ class TMJoystick(port: Int) : CommandJoystick(port) {
 
     // --- Base Buttons (Left Side) ---
     fun leftBaseTopLeft(): Trigger {
-        return button(11)
+        return button(5)
     }
 
     fun leftBaseTopMiddle(): Trigger {
-        return button(12)
+        return button(6)
     }
 
     fun leftBaseTopRight(): Trigger {
-        return button(13)
+        return button(7)
     }
 
     fun leftBaseBottomLeft(): Trigger {
-        return button(16)
+        return button(10)
     }
 
     fun leftBaseBottomMiddle(): Trigger {
-        return button(15)
+        return button(9)
     }
 
     fun leftBaseBottomRight(): Trigger {
-        return button(14)
+        return button(8)
     }
 
     // --- Base Buttons (Right Side) ---
     fun rightBaseTopLeft(): Trigger {
-        return button(7)
+        return button(13)
     }
 
     fun rightBaseTopMiddle(): Trigger {
-        return button(6)
+        return button(12)
     }
 
     fun rightBaseTopRight(): Trigger {
-        return button(5)
+        return button(11)
     }
 
     fun rightBaseBottomLeft(): Trigger {
-        return button(8)
+        return button(14)
     }
 
     fun rightBaseBottomMiddle(): Trigger {
-        return button(9)
+        return button(15)
     }
 
     fun rightBaseBottomRight(): Trigger {
-        return button(10)
+        return button(16)
     }
 
     // --- Axes ---

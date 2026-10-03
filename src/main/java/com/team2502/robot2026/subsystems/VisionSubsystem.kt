@@ -68,19 +68,27 @@ object VisionSubsystem {
         val sideStdDev = getStdDev(RobotContainer.INSTANCE.getPose(), sidePos)
         val frontStdDev = getStdDev(RobotContainer.INSTANCE.getPose(), frontPos)
 
-        //TODO: check which limelight updates first
-        addToFilter(sidePos, sideStdDev)
-        addToFilter(frontPos, frontStdDev)
+        val sideFirst = sidePos != null && frontPos != null && sidePos.timestampSeconds < frontPos.timestampSeconds
+        if (sideFirst) {
+            addToFilter(sidePos, sideStdDev)
+            addToFilter(frontPos, frontStdDev)
+        } else {
+            addToFilter(frontPos, frontStdDev)
+            addToFilter(sidePos, sideStdDev)
+        }
     }
 
     fun addToFilter(pose: PoseEstimate?, stdDev: Matrix<N3, N1>?) {
         if (stdDev != null && pose != null) {
             if (pose.tagCount > 0) {
                 if (pose.timestampSeconds > previousEstimateTimestamp) {
+                    previousEstimateTimestamp = pose.timestampSeconds
                     val translationDelta = pose.pose.minus(RobotContainer.INSTANCE.getPose())
                     val yawDelta = pose.pose.rotation.minus(RobotContainer.INSTANCE.getYaw())
 
-                    if (translationDelta.translation.norm > MAX_LIMELIGHT_POSE_DIFFERENCE_METERS || yawDelta.degrees > 90.0) {
+                    if (translationDelta.translation.norm > MAX_LIMELIGHT_POSE_DIFFERENCE_METERS 
+                        || yawDelta.degrees > 90.0 
+                        || yawDelta.degrees < -90.0) {
                         outlierCount++
 
                         if (outlierCount < ACCEPTABLE_OUTLIER_COUNT) {
@@ -98,7 +106,6 @@ object VisionSubsystem {
                         pigeonSet = true
                     }
 
-                    previousEstimateTimestamp = pose.timestampSeconds
                     val filterPose = Pose2d(
                         pose.pose.translation,
                          RobotContainer.INSTANCE.getYaw()

@@ -98,15 +98,12 @@ class RobotContainer {
         }
 
         // Bindings
-        operator.trigger().whileTrue(runIntakeCommand())
+        operator.trigger().or(driverRight.trigger()).whileTrue(runIntakeCommand())
         operator.middleThumbButton().whileTrue(runOuttakeCommand())
         operator.rightThumbButton().whileTrue(runUnjamCommand())
-        operator.leftBaseBottomRight().onTrue(Commands.runOnce({targetingSubsystem.mode = TargetingMode.AUTOMATIC}))
-        operator.leftBaseBottomMiddle().onTrue(Commands.runOnce({targetingSubsystem.mode = TargetingMode.IDLE}))
-
-        driverRight.trigger().whileTrue(runIntakeCommand())
-
-        Trigger{true}.whileTrue(shootCommand())
+        operator.leftBaseBottomRight().onTrue(Commands.runOnce({ targetingSubsystem.mode = TargetingMode.AUTOMATIC }))
+        operator.leftBaseBottomMiddle().onTrue(Commands.runOnce({ targetingSubsystem.mode = TargetingMode.IDLE }))
+        operator.leftBaseBottomRight().toggleOnTrue(shootCommand())
 
 //        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
 //        driverLeft.rightThumbButton().whileTrue(setTurretFieldAngleCommand(Rotation2d(0.0)))
@@ -136,7 +133,7 @@ class RobotContainer {
                 0.0
             )
         )
-        debugText.set("N/A")
+        debugText.set(targetingSubsystem.mode.toString())
     }
 
     val autonomousCommand: Command

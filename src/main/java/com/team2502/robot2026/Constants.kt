@@ -20,8 +20,8 @@ class Constants {
         const val INTAKE_OUT_DUTY_CYCLE: Double = -1.0
         const val TUNNEL_IN_DUTY_CYCLE: Double = 1.0
         const val TUNNEL_OUT_DUTY_CYCLE: Double = -1.0
-        const val RAMP_IN_DUTY_CYCLE: Double = 0.5
-        const val RAMP_OUT_DUTY_CYCLE: Double = -0.5
+        const val RAMP_IN_DUTY_CYCLE: Double = 0.8
+        const val RAMP_OUT_DUTY_CYCLE: Double = -0.8
 
         const val UNJAM_CYCLE_TIME_SECONDS: Double = 0.25
     }
@@ -48,7 +48,7 @@ class Constants {
         const val ORIGIN_TO_TURRET_CENTER_X = 0.1016
         const val ORIGIN_TO_TURRET_CENTER_Y = 0.05715
 
-        const val DISTANCE_SCALAR_SMUDGE_METERS = 1.0
+        const val DISTANCE_SCALAR_SMUDGE_METERS = 1.1
     }
 
     object Localization {
