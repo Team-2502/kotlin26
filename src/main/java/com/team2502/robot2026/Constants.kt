@@ -48,7 +48,7 @@ class Constants {
         const val ORIGIN_TO_TURRET_CENTER_X = 0.1016
         const val ORIGIN_TO_TURRET_CENTER_Y = 0.05715
 
-        const val DISTANCE_SCALAR_SMUDGE_METERS = 1.1
+        const val DISTANCE_SCALAR_SMUDGE_METERS = 1.25
     }
 
     object Localization {

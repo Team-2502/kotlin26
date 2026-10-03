@@ -359,6 +359,7 @@ class CommandSwerveDrivetrain : TunerSwerveDrivetrain, Subsystem {
                 .withVelocityX(vx)
                 .withVelocityY(vy)
                 .withRotationalRate(omega)
+                .withForwardPerspective(SwerveRequest.ForwardPerspectiveValue.BlueAlliance)
         )
     }
 

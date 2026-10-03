@@ -5,6 +5,7 @@ import choreo.auto.AutoRoutine
 import choreo.auto.AutoTrajectory
 import com.team2502.robot2026.RobotContainer
 import com.team2502.robot2026.commands.runIntakeCommand
+import com.team2502.robot2026.commands.shootCommand
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import edu.wpi.first.wpilibj2.command.Commands
 
@@ -32,11 +33,36 @@ class Autos(
             )
         )
 
-        path.active().whileTrue(
-            runIntakeCommand()
-        )
+        // path.active().whileTrue(
+        //     runIntakeCommand()
+        // )
 
         //path.done().onTrue()
+
+        return routine
+    }
+
+    fun backShootz(): AutoRoutine {
+        val routine = autoFactory.newRoutine("backup")
+
+        val path = routine.trajectory("backup")
+
+        
+        
+        routine.active().onTrue(
+            Commands.sequence(
+                path.resetOdometry(),
+                path.cmd()
+            )
+        )
+
+        // path.active().whileTrue(
+        //     runIntakeCommand()
+        // )
+
+        path.doneDelayed(2.0).onTrue(shootCommand())
+
+        path.doneDelayed(4.0).onTrue(runIntakeCommand())
 
         return routine
     }

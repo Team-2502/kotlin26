@@ -137,7 +137,7 @@ class RobotContainer {
     }
 
     val autonomousCommand: Command
-        get() = autos.path().cmd()
+        get() = autos.backShootz().cmd()
 
     // global subsystem access via companion object
     companion object {
