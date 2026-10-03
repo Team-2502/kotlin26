@@ -28,6 +28,8 @@ import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.button.Trigger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.jvm.optionals.getOrDefault
 
@@ -111,14 +113,12 @@ class RobotContainer {
         operator.trigger().whileTrue(runIntakeCommand())
         operator.middleThumbButton().whileTrue(runOuttakeCommand())
         operator.rightThumbButton().whileTrue(runUnjamCommand())
-        if (operator.leftBaseBottomRight().equals(true)) {
-            targetingSubsystem.mode = TargetingMode.AUTOMATIC
-        }
-        if (operator.leftBaseBottomMiddle().equals(true)) {
-            targetingSubsystem.mode = TargetingMode.IDLE
-        }
+        operator.leftBaseBottomRight().onTrue(Commands.runOnce({targetingSubsystem.mode = TargetingMode.AUTOMATIC}))
+        operator.leftBaseBottomMiddle().onTrue(Commands.runOnce({targetingSubsystem.mode = TargetingMode.IDLE}))
 
         driverRight.trigger().whileTrue(runIntakeCommand())
+
+        Trigger{true}.whileTrue(shootCommand())
 
 //        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
 //        driverLeft.rightThumbButton().whileTrue(setTurretFieldAngleCommand(Rotation2d(0.0)))
