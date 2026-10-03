@@ -11,7 +11,7 @@ import com.team2502.lib.config.RobotCANBus
 
 object RobotCAN {
     val DRIVE_MOTOR_CONFIG =
-        MotorConfig(PIDConfig(kP = 0.08), false, NeutralModeValue.Brake)
+        MotorConfig(PIDConfig(kP = 0.3), false, NeutralModeValue.Brake)
     val TURN_MOTOR_CONFIG =
         MotorConfig(PIDConfig(kP = 40.0), true, NeutralModeValue.Coast)
 

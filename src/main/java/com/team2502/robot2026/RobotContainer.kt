@@ -80,7 +80,7 @@ class RobotContainer {
             val alliance = DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue)
             var velX: Double
             var velY: Double
-            val rotationRate = -driverRight.z
+            val rotationRate = driverRight.z
             if (alliance == DriverStation.Alliance.Red) {
                 velX = -driverLeft.y
                 velY = driverLeft.x
@@ -153,7 +153,7 @@ class RobotContainer {
         return Pose2d(ret.x, ret.y, getYaw())
     }
 
-    private fun getYaw(): Rotation2d {
+    fun getYaw(): Rotation2d {
         return Rotation2d.fromDegrees(drivetrainSubsystem.pigeon2.yaw.valueAsDouble) + VisionSubsystem.pigeonZero
     }
 }

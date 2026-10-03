@@ -77,7 +77,7 @@ class Constants {
     object Weights {
         const val COMMANDED_VELOCITY_WEIGHT = 0.65
         const val GYRO_EMA_WEIGHT = 0.01
-
+        const val VISION_HEADING_STD_DEV_HARDCODE = 0.01
         const val CHASSIS_XY_STDDEV_COEFFICIENT = 0.04
         const val DEFAULT_XY_STDDEV = 0.25
     }

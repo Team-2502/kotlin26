@@ -81,8 +81,9 @@ class TMJoystick(port: Int) : CommandJoystick(port) {
         return -getRawAxis(1)
     }
 
+    /// CCW+
     override fun getTwist(): Double {
-        return getRawAxis(2)
+        return -getRawAxis(2)
     }
 
     val slider: Double

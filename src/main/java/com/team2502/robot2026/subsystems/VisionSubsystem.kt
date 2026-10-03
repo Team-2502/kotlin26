@@ -9,6 +9,7 @@ import com.team2502.robot2026.Constants.Localization.LIMELIGHT_SIDE_NAME
 import com.team2502.robot2026.Constants.Weights.CHASSIS_XY_STDDEV_COEFFICIENT
 import com.team2502.robot2026.Constants.Weights.DEFAULT_XY_STDDEV
 import com.team2502.robot2026.Constants.Weights.GYRO_EMA_WEIGHT
+import com.team2502.robot2026.Constants.Weights.VISION_HEADING_STD_DEV_HARDCODE
 import com.team2502.robot2026.RobotContainer
 import com.team2502.robot2026.subsystems.VisionSubsystem.previousEstimateTimestamp
 import edu.wpi.first.math.Matrix
@@ -40,7 +41,6 @@ object VisionSubsystem {
             Arrays.stream(estimate.rawFiducials)
                 .mapToDouble { fiducial: RawFiducial? -> fiducial!!.distToCamera }.min()
         var stdDev: Double
-        val headingStdDev = 1000.0
 
         var closestTagDist = Double.MAX_VALUE
         for (fiducial in estimate.rawFiducials) {
@@ -59,7 +59,7 @@ object VisionSubsystem {
                     / estimate.tagCount
                     + DEFAULT_XY_STDDEV) / 10.0
 
-        return VecBuilder.fill(stdDev, stdDev, headingStdDev)
+        return VecBuilder.fill(stdDev, stdDev, VISION_HEADING_STD_DEV_HARDCODE)
     }
 
     fun update() {
@@ -81,13 +81,17 @@ object VisionSubsystem {
                     if (pigeonSet) {
                         pigeonZero += currentOffset.minus(pigeonZero) * GYRO_EMA_WEIGHT
                     } else {
-                        pigeonZero = pose.pose.rotation
+                        pigeonZero = currentOffset
                         pigeonSet = true
                     }
 
                     previousEstimateTimestamp = pose.timestampSeconds
+                    val filterPose = Pose2d(
+                        pose.pose.translation,
+                         RobotContainer.INSTANCE.getYaw()
+                    )
                     RobotContainer.INSTANCE.drivetrainSubsystem.addVisionMeasurement(
-                        pose.pose,
+                        filterPose,
                         pose.timestampSeconds,
                         stdDev,
                     )
