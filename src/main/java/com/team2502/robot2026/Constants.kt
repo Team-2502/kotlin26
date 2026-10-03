@@ -47,6 +47,8 @@ class Constants {
 
         const val ORIGIN_TO_TURRET_CENTER_X = 0.1016
         const val ORIGIN_TO_TURRET_CENTER_Y = 0.05715
+
+        const val DISTANCE_SCALAR_SMUDGE_METERS = 1.0
     }
 
     object Localization {
@@ -55,6 +57,8 @@ class Constants {
 
         const val MAX_LIMELIGHT_POSE_DIFFERENCE_METERS = 1.0
         const val ACCEPTABLE_OUTLIER_COUNT = 4
+        const val POSE_ANTICIPATION_TIMESTEP_SECS = 0.1
+        const val YAW_ANTICIPATION_TIMESTEP_SECS = 0.05
     }
 
     /// Choreo coordinates: blue right is (0,0), towards red is +x

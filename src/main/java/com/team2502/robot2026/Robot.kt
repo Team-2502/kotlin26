@@ -38,7 +38,6 @@ class Robot : TimedRobot() {
 
     override fun autonomousInit() {
         autonomousCommand = robotContainer.autonomousCommand
-        robotContainer.reset()
         CommandScheduler.getInstance().schedule(autonomousCommand)
     }
 
@@ -51,7 +50,6 @@ class Robot : TimedRobot() {
         if (autonomousCommand != null) {
             autonomousCommand!!.cancel()
         }
-        robotContainer.reset()
     }
 
     override fun teleopPeriodic() {

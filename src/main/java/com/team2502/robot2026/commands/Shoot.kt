@@ -1,13 +1,16 @@
 package com.team2502.robot2026.commands
 
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.hypot
+import com.team2502.robot2026.Constants.Localization.POSE_ANTICIPATION_TIMESTEP_SECS
+import com.team2502.robot2026.Constants.Localization.YAW_ANTICIPATION_TIMESTEP_SECS
+import com.team2502.robot2026.Constants.Turret.DISTANCE_SCALAR_SMUDGE_METERS
 import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_X
 import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_Y
 import com.team2502.robot2026.Constants.Weights.COMMANDED_VELOCITY_WEIGHT
 import com.team2502.robot2026.RobotContainer
 import com.team2502.robot2026.subsystems.TargetingMode
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.hypot
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
@@ -17,63 +20,66 @@ import edu.wpi.first.wpilibj2.command.Commands
 fun shootCommand(): Command {
     val turretSubsystem = RobotContainer.INSTANCE.turretSubsystem
     val shooterSubsystem = RobotContainer.INSTANCE.shooterSubsystem
-    val driveSubsystem = RobotContainer.INSTANCE.drivetrainSubsystem
     val targetingSubsystem = RobotContainer.INSTANCE.targetingSubsystem
 
-        return Commands.run({
-            if (targetingSubsystem.mode == TargetingMode.AUTOMATIC) {
-                val currentPose = RobotContainer.INSTANCE.getPose()
-                val target = targetingSubsystem.currentTarget
-                val currentFlywheelSpeed = shooterSubsystem.flywheelSpeed()
+    return Commands.run({
+        if (targetingSubsystem.mode == TargetingMode.AUTOMATIC) {
+            val currentPose = RobotContainer.INSTANCE.getPose()
+            val target = targetingSubsystem.currentTarget
+            val currentFlywheelSpeed = shooterSubsystem.flywheelSpeed()
+            val velocityVector = RobotContainer.INSTANCE.getVelocity()
+            val commandedVelocityVector = RobotContainer.INSTANCE.getCommandedVelocity()
+            val futurePose = Pose2d(
+                currentPose.x + POSE_ANTICIPATION_TIMESTEP_SECS * velocityVector.vxMetersPerSecond,
+                currentPose.y + POSE_ANTICIPATION_TIMESTEP_SECS * velocityVector.vyMetersPerSecond,
+                currentPose.rotation + Rotation2d(YAW_ANTICIPATION_TIMESTEP_SECS * velocityVector.omegaRadiansPerSecond)
+            )
 
-                //TODO: Future Pose
-                val futurePose = currentPose
+            val currentTurretPose = currentPose.translation + Translation2d(
+                ORIGIN_TO_TURRET_CENTER_X,
+                ORIGIN_TO_TURRET_CENTER_Y,
+            ).rotateBy(Rotation2d(currentPose.rotation.radians))
+            val futureTurretPose = futurePose.translation + Translation2d(
+                ORIGIN_TO_TURRET_CENTER_X,
+                ORIGIN_TO_TURRET_CENTER_Y,
+            ).rotateBy(Rotation2d(futurePose.rotation.radians))
 
-                val vectorToTurretCenter = Translation2d(
-                    ORIGIN_TO_TURRET_CENTER_X,
-                    ORIGIN_TO_TURRET_CENTER_Y,
-                ).rotateBy(Rotation2d(futurePose.rotation.radians))
-                val turretPose = futurePose.translation + vectorToTurretCenter
+            val weightedVelocityX =
+                velocityVector.vxMetersPerSecond * (1.0 - COMMANDED_VELOCITY_WEIGHT) + (commandedVelocityVector.vxMetersPerSecond * COMMANDED_VELOCITY_WEIGHT)
+            val weightedVelocityY =
+                velocityVector.vyMetersPerSecond * (1.0 - COMMANDED_VELOCITY_WEIGHT) + (commandedVelocityVector.vyMetersPerSecond * COMMANDED_VELOCITY_WEIGHT)
+            val weightedVelocity = Translation2d(weightedVelocityX, weightedVelocityY)
 
-                val velocityVector = Translation2d(0.0, 0.0)
-                val commandedVelocityVector = Translation2d(0.0, 0.0)
+            // target-relative = tr
+            val trVelocity = targetRelativeVelocity(weightedVelocity, currentPose, target.position.translation)
+            val currentDist = currentTurretPose.getDistance(target.position.translation) * DISTANCE_SCALAR_SMUDGE_METERS
+            val futureDist = futureTurretPose.getDistance(target.position.translation) * DISTANCE_SCALAR_SMUDGE_METERS
 
-                val weightedVelocityX =
-                    velocityVector.x * (1.0 - COMMANDED_VELOCITY_WEIGHT) + (commandedVelocityVector.x * COMMANDED_VELOCITY_WEIGHT)
-                val weightedVelocityY =
-                    velocityVector.y * (1.0 - COMMANDED_VELOCITY_WEIGHT) + (commandedVelocityVector.y * COMMANDED_VELOCITY_WEIGHT)
-                val weightedVelocity = Translation2d(weightedVelocityX, weightedVelocityY)
+            val flywheelSpeed: Double
+            val hood: Double
+            val angle: Rotation2d
 
-                // target-relative = tr
-                val trVelocity = targetRelativeVelocity(weightedVelocity, futurePose, target.position.translation)
-                val currentDist = currentPose.translation.getDistance(target.position.translation)
-                val futureDist = turretPose.getDistance(target.position.translation)
-
-                val flywheelSpeed: Double
-                val hood: Double
-                val angle: Rotation2d
-
-                if (target.is_hub) {
-                    flywheelSpeed = predictHubSpeed(futureDist, trVelocity.x, trVelocity.y)
-                    hood = predictHubHood(futureDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed)
-                    angle = getAngleTo(turretPose, target.position.translation) +
-                            Rotation2d(predictYaw(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed, hood))
-                } else {
-                    flywheelSpeed = predictPassSpeed(futureDist, trVelocity.x, trVelocity.y)
-                    hood = predictPassHood(futureDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed)
-                    angle = getAngleTo(turretPose, target.position.translation) +
-                            Rotation2d(predictYaw(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed, hood))
-                }
-
-                shooterSubsystem.setShooterSpeed(flywheelSpeed)
-                shooterSubsystem.setHoodPosition(hood)
-                turretSubsystem.pointTo(angle - futurePose.rotation)
+            if (target.is_hub) {
+                flywheelSpeed = predictHubSpeed(futureDist, trVelocity.x, trVelocity.y)
+                hood = predictHubHood(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed)
+                angle = getAngleTo(futureTurretPose, target.position.translation) +
+                        Rotation2d(predictYaw(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed, hood))
             } else {
-                shooterSubsystem.stop()
-                turretSubsystem.stop()
+                flywheelSpeed = predictPassSpeed(futureDist, trVelocity.x, trVelocity.y)
+                hood = predictPassHood(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed)
+                angle = getAngleTo(futureTurretPose, target.position.translation) +
+                        Rotation2d(predictYaw(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed, hood))
             }
-        }, turretSubsystem, shooterSubsystem)
-    }
+
+            shooterSubsystem.setShooterSpeed(flywheelSpeed)
+            shooterSubsystem.setHoodPosition(hood)
+            turretSubsystem.pointTo(angle - futurePose.rotation)
+        } else {
+            shooterSubsystem.stop()
+            turretSubsystem.stop()
+        }
+    }, turretSubsystem, shooterSubsystem)
+}
 
 
 fun targetRelativeVelocity(
