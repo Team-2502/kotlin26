@@ -1,25 +1,23 @@
 package com.team2502.robot2026.subsystems
 
-import com.ctre.phoenix6.Utils
 import com.team2502.lib.LimelightHelpers
 import com.team2502.lib.LimelightHelpers.PoseEstimate
 import com.team2502.lib.LimelightHelpers.RawFiducial
+import com.team2502.robot2026.Constants.Localization.ACCEPTABLE_OUTLIER_COUNT
 import com.team2502.robot2026.Constants.Localization.LIMELIGHT_FRONT_NAME
 import com.team2502.robot2026.Constants.Localization.LIMELIGHT_SIDE_NAME
+import com.team2502.robot2026.Constants.Localization.MAX_LIMELIGHT_POSE_DIFFERENCE_METERS
 import com.team2502.robot2026.Constants.Weights.CHASSIS_XY_STDDEV_COEFFICIENT
 import com.team2502.robot2026.Constants.Weights.DEFAULT_XY_STDDEV
 import com.team2502.robot2026.Constants.Weights.GYRO_EMA_WEIGHT
 import com.team2502.robot2026.Constants.Weights.VISION_HEADING_STD_DEV_HARDCODE
 import com.team2502.robot2026.RobotContainer
-import com.team2502.robot2026.subsystems.VisionSubsystem.previousEstimateTimestamp
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
-import edu.wpi.first.math.Vector
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
-import edu.wpi.first.wpilibj.Timer;
 import java.util.*
 import kotlin.math.pow
 
@@ -29,6 +27,8 @@ object VisionSubsystem {
 
     var pigeonZero = Rotation2d(0.0)
     var pigeonSet = false
+
+    var outlierCount = 0
 
     fun getVisionPose2d(limelightName: String): PoseEstimate? {
         return LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName);
@@ -77,6 +77,19 @@ object VisionSubsystem {
         if (stdDev != null && pose != null) {
             if (pose.tagCount > 0) {
                 if (pose.timestampSeconds > previousEstimateTimestamp) {
+                    val translationDelta = pose.pose.minus(RobotContainer.INSTANCE.getPose())
+                    val yawDelta = pose.pose.rotation.minus(RobotContainer.INSTANCE.getYaw())
+
+                    if (translationDelta.translation.norm > MAX_LIMELIGHT_POSE_DIFFERENCE_METERS || yawDelta.degrees > 90.0) {
+                        outlierCount++
+
+                        if (outlierCount < ACCEPTABLE_OUTLIER_COUNT) {
+                            return
+                        }
+                    }
+
+                    outlierCount = 0
+
                     val currentOffset = pose.pose.rotation - Rotation2d.fromDegrees(RobotContainer.INSTANCE.drivetrainSubsystem.pigeon2.yaw.valueAsDouble)
                     if (pigeonSet) {
                         pigeonZero += currentOffset.minus(pigeonZero) * GYRO_EMA_WEIGHT

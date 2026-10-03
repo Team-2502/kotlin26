@@ -52,6 +52,9 @@ class Constants {
     object Localization {
         const val LIMELIGHT_SIDE_NAME: String = "limelight-side"
         const val LIMELIGHT_FRONT_NAME: String = "limelight-front"
+
+        const val MAX_LIMELIGHT_POSE_DIFFERENCE_METERS = 1.0
+        const val ACCEPTABLE_OUTLIER_COUNT = 4
     }
 
     /// Choreo coordinates: blue right is (0,0), towards red is +x
