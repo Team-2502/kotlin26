@@ -5,8 +5,6 @@ import com.ctre.phoenix6.controls.VelocityDutyCycle
 import com.team2502.lib.FileZero
 import com.team2502.lib.config.create
 import com.team2502.robot2026.Constants
-import com.team2502.robot2026.Constants.Turret.ABS_TO_RELATIVE_RATIO
-import com.team2502.robot2026.Constants.Turret.TURRET_ABSOLUTE_ENCODER_ZERO_ROTATIONS
 import com.team2502.robot2026.RobotCAN.HOOD
 import com.team2502.robot2026.RobotCAN.SHOOTER_LEFT
 import com.team2502.robot2026.RobotCAN.SHOOTER_RIGHT
@@ -55,13 +53,9 @@ class ShooterSubsystem : SubsystemBase() {
         return shooterLeftMotor.velocity.valueAsDouble
     }
 
-    fun stopShooter() {
+    fun stop() {
         shooterLeftMotor.stopMotor()
         shooterRightMotor.stopMotor()
-        shooterHoodMotor.stopMotor()
-    }
-
-    fun stopHood() {
         shooterHoodMotor.stopMotor()
     }
 }

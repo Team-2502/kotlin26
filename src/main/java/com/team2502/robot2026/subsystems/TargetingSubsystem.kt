@@ -80,7 +80,7 @@ class TargetingSubsystem(private val robotContainer: RobotContainer) {
     var currentZone = Zone.BLUE_BOTTOM
 
     fun update() {
-        val pose = robotContainer.drivetrainSubsystem.state.Pose;
+        val pose = robotContainer.getPose()
 
         updateZone(pose)
         updateTarget()
