@@ -5,9 +5,9 @@ package com.team2502.robot2026
 
 import com.ctre.phoenix6.swerve.SwerveModule
 import com.ctre.phoenix6.swerve.SwerveRequest
+import com.team2502.lib.LinearRegression
 import com.team2502.lib.TMJoystick
 import com.team2502.robot2026.Constants.OI
-import com.team2502.robot2026.Constants.Weights.GYRO_EMA_WEIGHT
 import com.team2502.robot2026.auto.Autos
 import com.team2502.robot2026.commands.runIntakeCommand
 import com.team2502.robot2026.commands.runOuttakeCommand
@@ -60,6 +60,13 @@ class RobotContainer {
     val turretSubsystem: TurretSubsystem = TurretSubsystem()
     val targetingSubsystem: TargetingSubsystem = TargetingSubsystem(this) //TODO: this is bad lol
 
+
+    private val lastPoses: Array<PoseTime?> = arrayOfNulls(8)
+    private var poseStart = 0
+    private var poseUpdates = 0
+    var velocity: Pose2d? = null
+        private set
+
     // setup for global subsystem access
     init {
         INSTANCE = this
@@ -72,6 +79,12 @@ class RobotContainer {
         shooterSubsystem.initialize()
 
         debugSlider.setDefault(0.0)
+    }
+
+    fun reset() {
+        velocity = null
+        poseStart = 0
+        poseUpdates = 0
     }
 
     fun configureBindings() {
@@ -107,8 +120,9 @@ class RobotContainer {
     private val autos = Autos(drivetrainSubsystem)
 
     fun update() {
+        VisionSubsystem.update()
+        updateVelocity()
         targetingSubsystem.update()
-
         val pose = INSTANCE.getPose()
 
         xPub.set(pose.x)
@@ -126,7 +140,7 @@ class RobotContainer {
                 0.0
             )
         )
-        debugText.set(getYaw().toString())
+        debugText.set(velocity.toString())
     }
 
     val autonomousCommand: Command
@@ -152,4 +166,32 @@ class RobotContainer {
     fun getYaw(): Rotation2d {
         return Rotation2d.fromDegrees(drivetrainSubsystem.pigeon2.yaw.valueAsDouble) + VisionSubsystem.pigeonZero
     }
+
+    private fun updateVelocity() {
+        val now = PoseTime(this.getPose(), System.nanoTime())
+        this.lastPoses[this.poseStart] = now
+        this.poseStart = (this.poseStart + 1) % 8
+        poseUpdates++
+        if (poseUpdates < 8) {
+            return
+        }
+        val linearRegressionX = LinearRegression()
+        val linearRegressionY = LinearRegression()
+
+        for (i in this.poseStart..this.poseStart + this.lastPoses.size) {
+            val index = i % this.lastPoses.size
+            val pose = this.lastPoses[index] ?: continue
+
+            linearRegressionX.add(pose.pose.x, pose.time.toDouble())
+            linearRegressionY.add(pose.pose.y, pose.time.toDouble())
+        }
+        linearRegressionX.fit()
+        linearRegressionY.fit()
+        val velocityX = linearRegressionX.vx / linearRegressionX.vy
+        val velocityY = linearRegressionY.vx / linearRegressionY.vy
+
+        velocity = Pose2d(velocityX, velocityY, Rotation2d())
+    }
+
+    private class PoseTime(val pose: Pose2d = Pose2d(), val time: Long = 0)
 }
