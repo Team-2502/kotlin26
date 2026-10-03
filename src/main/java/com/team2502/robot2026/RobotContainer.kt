@@ -172,18 +172,18 @@ class RobotContainer {
         this.lastPoses[this.poseStart] = now
         this.poseStart = (this.poseStart + 1) % 8
         poseUpdates++
-        if (poseUpdates < 8) {
+        if (poseUpdates <= 8) {
             return
         }
         val linearRegressionX = LinearRegression()
         val linearRegressionY = LinearRegression()
 
-        for (i in this.poseStart..this.poseStart + this.lastPoses.size) {
+        for (i in this.poseStart until this.poseStart + this.lastPoses.size) {
             val index = i % this.lastPoses.size
             val pose = this.lastPoses[index] ?: continue
 
-            linearRegressionX.add(pose.pose.x, pose.time.toDouble())
-            linearRegressionY.add(pose.pose.y, pose.time.toDouble())
+            linearRegressionX.add(pose.pose.x, (pose.time - now.time) / 1e9)
+            linearRegressionY.add(pose.pose.y, (pose.time - now.time) / 1e9)
         }
         linearRegressionX.fit()
         linearRegressionY.fit()

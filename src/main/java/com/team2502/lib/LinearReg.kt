@@ -3,8 +3,6 @@ package com.team2502.lib
 import edu.wpi.first.math.geometry.Pose2d
 import kotlin.math.sqrt
 
-class PoseTime(val pose: Pose2d = Pose2d(), val time: Long = 0)
-
 class LinearRegression() {
     var n = 0.0
     var sx = 0.0
@@ -17,7 +15,8 @@ class LinearRegression() {
     var vx = 0.0
     var vy = 0.0
 
-    public fun add(x: Double, y: Double) {
+    fun add(x: Double, y: Double) {
+        n++
         sx += x
         sy += y
 
@@ -26,7 +25,7 @@ class LinearRegression() {
         syy += y*y
     }
 
-    public fun fit() {
+    fun fit() {
         val invN = 1.0 / n
         val fx = sx*invN
         val fy = sy*invN
