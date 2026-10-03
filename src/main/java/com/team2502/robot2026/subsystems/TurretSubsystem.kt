@@ -53,4 +53,8 @@ class TurretSubsystem : SubsystemBase() {
                 .coerceIn(currentPositon - TURRET_CLAMP, currentPositon + TURRET_CLAMP)
         setTurretPosition(targetPosition)
     }
+
+    fun stop() {
+        turretMotor.stopMotor()
+    }
 }

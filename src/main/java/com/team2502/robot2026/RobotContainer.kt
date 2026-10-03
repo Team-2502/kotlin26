@@ -17,6 +17,7 @@ import com.team2502.robot2026.commands.setTurretFieldAngleCommand
 import com.team2502.robot2026.commands.shootCommand
 import com.team2502.robot2026.subsystems.IntakeSubsystem
 import com.team2502.robot2026.subsystems.ShooterSubsystem
+import com.team2502.robot2026.subsystems.TargetingMode
 import com.team2502.robot2026.subsystems.TargetingSubsystem
 import com.team2502.robot2026.subsystems.TurretSubsystem
 import com.team2502.robot2026.subsystems.VisionSubsystem
@@ -106,13 +107,21 @@ class RobotContainer {
                 .withRotationalRate(rotationRate * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
         }
 
-        // Intake Bindings
-        driverLeft.trigger().whileTrue(runIntakeCommand())
-        driverRight.leftThumbButton().whileTrue(runOuttakeCommand())
-        driverRight.middleThumbButton().whileTrue(runUnjamCommand())
-        driverRight.trigger().whileTrue(shootCommand())
-        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
-        driverLeft.rightThumbButton().whileTrue(setTurretFieldAngleCommand(Rotation2d(0.0)))
+        // Bindings
+        operator.trigger().whileTrue(runIntakeCommand())
+        operator.middleThumbButton().whileTrue(runOuttakeCommand())
+        operator.rightThumbButton().whileTrue(runUnjamCommand())
+        if (operator.leftBaseBottomRight().equals(true)) {
+            targetingSubsystem.mode = TargetingMode.AUTOMATIC
+        }
+        if (operator.leftBaseBottomMiddle().equals(true)) {
+            targetingSubsystem.mode = TargetingMode.IDLE
+        }
+
+        driverRight.trigger().whileTrue(runIntakeCommand())
+
+//        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
+//        driverLeft.rightThumbButton().whileTrue(setTurretFieldAngleCommand(Rotation2d(0.0)))
         // driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())
     }
 
@@ -123,8 +132,8 @@ class RobotContainer {
         VisionSubsystem.update()
         updateVelocity()
         targetingSubsystem.update()
-        val pose = INSTANCE.getPose()
 
+        val pose = INSTANCE.getPose()
         xPub.set(pose.x)
         yPub.set(pose.y)
         zPub.set(pose.rotation.degrees)
