@@ -37,7 +37,7 @@ class Robot : TimedRobot() {
     override fun disabledExit() {}
 
     override fun autonomousInit() {
-        autonomousCommand = robotContainer.autonomousCommand
+        autonomousCommand = robotContainer.getAuto()
         CommandScheduler.getInstance().schedule(autonomousCommand)
     }
 

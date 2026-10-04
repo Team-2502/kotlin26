@@ -71,13 +71,13 @@ class Constants {
         const val RED_HUB_X_METERS = 11.915394
         const val RED_HUB_Y_METERS = 4.034536
 
-        const val RED_TOP_PASS_OFFSET_X_METERS = 2.0
+        const val RED_TOP_PASS_OFFSET_X_METERS = 3.0
         const val RED_TOP_PASS_OFFSET_Y_METERS = 2.01
-        const val RED_BOTTOM_PASS_OFFSET_X_METERS = 2.0
+        const val RED_BOTTOM_PASS_OFFSET_X_METERS = 3.0
         const val RED_BOTTOM_PASS_OFFSET_Y_METERS = -2.01
-        const val BLUE_TOP_PASS_OFFSET_X_METERS = -2.0
+        const val BLUE_TOP_PASS_OFFSET_X_METERS = -3.0
         const val BLUE_TOP_PASS_OFFSET_Y_METERS = 2.01
-        const val BLUE_BOTTOM_PASS_OFFSET_X_METERS = -2.0
+        const val BLUE_BOTTOM_PASS_OFFSET_X_METERS = -3.0
         const val BLUE_BOTTOM_PASS_OFFSET_Y_METERS = -2.01
     }
 

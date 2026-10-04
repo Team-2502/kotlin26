@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 package com.team2502.robot2026
 
+import choreo.auto.AutoRoutine
 import com.ctre.phoenix6.swerve.SwerveModule
 import com.ctre.phoenix6.swerve.SwerveRequest
 import com.team2502.lib.LinearRegression
@@ -28,6 +29,8 @@ import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.button.Trigger
@@ -57,6 +60,8 @@ class RobotContainer {
     val debugSlider = debugNT.getDoubleTopic("debugSlider").getEntry(0.0)
     val debugText = debugNT.getStringTopic("debugText").publish()
 
+    val autoChooser = SendableChooser<AutoRoutine>()
+
     // Subsystems
     val drivetrainSubsystem: CommandSwerveDrivetrain = TunerConstants.createDrivetrain()
     val intakeSubsystem: IntakeSubsystem = IntakeSubsystem()
@@ -74,6 +79,17 @@ class RobotContainer {
         configureBindings()
         turretSubsystem.initialize()
         shooterSubsystem.initialize()
+
+        autoChooser.setDefaultOption("red left", autos.redLeft())
+        autoChooser.addOption("red right", autos.redRight())
+        autoChooser.addOption("red mid", autos.redMid())
+
+        autoChooser.addOption("blue left", autos.blueLeft())
+        autoChooser.addOption("blue right", autos.blueRight())
+        autoChooser.addOption("blue mid", autos.blueMid())
+        
+        
+        SmartDashboard.putData("Auto Chooser", autoChooser)
 
         debugSlider.setDefault(0.0)
     }
@@ -136,8 +152,9 @@ class RobotContainer {
         debugText.set(targetingSubsystem.mode.toString())
     }
 
-    val autonomousCommand: Command
-        get() = autos.backShootz().cmd()
+    fun getAuto(): Command {
+        return autoChooser.selected.cmd()
+    }
 
     // global subsystem access via companion object
     companion object {

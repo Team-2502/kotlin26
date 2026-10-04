@@ -22,7 +22,7 @@ fun shootCommand(): Command {
     val shooterSubsystem = RobotContainer.INSTANCE.shooterSubsystem
     val targetingSubsystem = RobotContainer.INSTANCE.targetingSubsystem
 
-    return Commands.run({
+    return Commands.runEnd({
         if (targetingSubsystem.mode == TargetingMode.AUTOMATIC) {
             val currentPose = RobotContainer.INSTANCE.getPose()
             val target = targetingSubsystem.currentTarget
@@ -78,6 +78,10 @@ fun shootCommand(): Command {
             shooterSubsystem.stop()
             turretSubsystem.stop()
         }
+    }, {
+        turretSubsystem.stop()
+        shooterSubsystem.stop()
+        targetingSubsystem.mode = TargetingMode.IDLE
     }, turretSubsystem, shooterSubsystem)
 }
 

@@ -41,3 +41,9 @@ fun runUnjamCommand() : Command {
         _ -> intakeSubsystem.stop()
     }
 }
+
+fun stopIntakeCommand() : Command {
+    val intakeSubsystem = RobotContainer.INSTANCE.intakeSubsystem
+
+    return runOnce(intakeSubsystem::stop)
+}
