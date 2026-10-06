@@ -7,7 +7,6 @@ import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_X
 import com.team2502.robot2026.Constants.Turret.ORIGIN_TO_TURRET_CENTER_Y
 import com.team2502.robot2026.Constants.Weights.COMMANDED_VELOCITY_WEIGHT
 import com.team2502.robot2026.RobotContainer
-import com.team2502.robot2026.subsystems.TargetingMode
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -20,68 +19,12 @@ import edu.wpi.first.wpilibj2.command.Commands
 fun shootCommand(): Command {
     val turretSubsystem = RobotContainer.INSTANCE.turretSubsystem
     val shooterSubsystem = RobotContainer.INSTANCE.shooterSubsystem
-    val targetingSubsystem = RobotContainer.INSTANCE.targetingSubsystem
 
     return Commands.runEnd({
-        if (targetingSubsystem.mode == TargetingMode.AUTOMATIC) {
-            val currentPose = RobotContainer.INSTANCE.getPose()
-            val target = targetingSubsystem.currentTarget
-            val currentFlywheelSpeed = shooterSubsystem.flywheelSpeed()
-            val velocityVector = RobotContainer.INSTANCE.getVelocity()
-            val commandedVelocityVector = RobotContainer.INSTANCE.getCommandedVelocity()
-            val futurePose = Pose2d(
-                currentPose.x + POSE_ANTICIPATION_TIMESTEP_SECS * velocityVector.vxMetersPerSecond,
-                currentPose.y + POSE_ANTICIPATION_TIMESTEP_SECS * velocityVector.vyMetersPerSecond,
-                currentPose.rotation + Rotation2d(YAW_ANTICIPATION_TIMESTEP_SECS * velocityVector.omegaRadiansPerSecond)
-            )
 
-            val currentTurretPose = currentPose.translation + Translation2d(
-                ORIGIN_TO_TURRET_CENTER_X,
-                ORIGIN_TO_TURRET_CENTER_Y,
-            ).rotateBy(Rotation2d(currentPose.rotation.radians))
-            val futureTurretPose = futurePose.translation + Translation2d(
-                ORIGIN_TO_TURRET_CENTER_X,
-                ORIGIN_TO_TURRET_CENTER_Y,
-            ).rotateBy(Rotation2d(futurePose.rotation.radians))
-
-            val weightedVelocityX =
-                velocityVector.vxMetersPerSecond * (1.0 - COMMANDED_VELOCITY_WEIGHT) + (commandedVelocityVector.vxMetersPerSecond * COMMANDED_VELOCITY_WEIGHT)
-            val weightedVelocityY =
-                velocityVector.vyMetersPerSecond * (1.0 - COMMANDED_VELOCITY_WEIGHT) + (commandedVelocityVector.vyMetersPerSecond * COMMANDED_VELOCITY_WEIGHT)
-            val weightedVelocity = Translation2d(weightedVelocityX, weightedVelocityY)
-
-            // target-relative = tr
-            val trVelocity = targetRelativeVelocity(weightedVelocity, currentPose, target.position.translation)
-            val currentDist = currentTurretPose.getDistance(target.position.translation) * DISTANCE_SCALAR_SMUDGE_METERS
-            val futureDist = futureTurretPose.getDistance(target.position.translation) * DISTANCE_SCALAR_SMUDGE_METERS
-
-            val flywheelSpeed: Double
-            val hood: Double
-            val angle: Rotation2d
-
-            if (target.is_hub) {
-                flywheelSpeed = predictHubSpeed(futureDist, trVelocity.x, trVelocity.y)
-                hood = predictHubHood(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed)
-                angle = getAngleTo(futureTurretPose, target.position.translation) +
-                        Rotation2d(predictYaw(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed, hood))
-            } else {
-                flywheelSpeed = predictPassSpeed(futureDist, trVelocity.x, trVelocity.y)
-                hood = predictPassHood(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed)
-                angle = getAngleTo(futureTurretPose, target.position.translation) +
-                        Rotation2d(predictYaw(currentDist, trVelocity.x, trVelocity.y, currentFlywheelSpeed, hood))
-            }
-
-            shooterSubsystem.setShooterSpeed(flywheelSpeed)
-            shooterSubsystem.setHoodPosition(hood)
-            turretSubsystem.pointTo(angle - futurePose.rotation)
-        } else {
-            shooterSubsystem.stop()
-            turretSubsystem.stop()
-        }
     }, {
         turretSubsystem.stop()
         shooterSubsystem.stop()
-        targetingSubsystem.mode = TargetingMode.IDLE
     }, turretSubsystem, shooterSubsystem)
 }
 

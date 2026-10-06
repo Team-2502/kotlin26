@@ -6,34 +6,24 @@ package com.team2502.robot2026
 import choreo.auto.AutoRoutine
 import com.ctre.phoenix6.swerve.SwerveModule
 import com.ctre.phoenix6.swerve.SwerveRequest
-import com.team2502.lib.LinearRegression
 import com.team2502.lib.TMJoystick
 import com.team2502.robot2026.Constants.OI
-import com.team2502.robot2026.auto.Autos
 import com.team2502.robot2026.commands.runIntakeCommand
 import com.team2502.robot2026.commands.runOuttakeCommand
 import com.team2502.robot2026.commands.runUnjamCommand
-import com.team2502.robot2026.commands.setTurretCommand
-import com.team2502.robot2026.commands.setTurretFieldAngleCommand
 import com.team2502.robot2026.commands.shootCommand
 import com.team2502.robot2026.subsystems.IntakeSubsystem
 import com.team2502.robot2026.subsystems.ShooterSubsystem
-import com.team2502.robot2026.subsystems.TargetingMode
-import com.team2502.robot2026.subsystems.TargetingSubsystem
 import com.team2502.robot2026.subsystems.TurretSubsystem
-import com.team2502.robot2026.subsystems.VisionSubsystem
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
-import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.Commands
-import edu.wpi.first.wpilibj2.command.button.Trigger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.jvm.optionals.getOrDefault
 
@@ -60,14 +50,11 @@ class RobotContainer {
     val debugSlider = debugNT.getDoubleTopic("debugSlider").getEntry(0.0)
     val debugText = debugNT.getStringTopic("debugText").publish()
 
-    val autoChooser = SendableChooser<AutoRoutine>()
-
     // Subsystems
     val drivetrainSubsystem: CommandSwerveDrivetrain = TunerConstants.createDrivetrain()
     val intakeSubsystem: IntakeSubsystem = IntakeSubsystem()
     val shooterSubsystem: ShooterSubsystem = ShooterSubsystem()
     val turretSubsystem: TurretSubsystem = TurretSubsystem()
-    val targetingSubsystem: TargetingSubsystem = TargetingSubsystem(this) //TODO: this is bad lol
 
     // setup for global subsystem access
     init {
@@ -80,17 +67,6 @@ class RobotContainer {
         turretSubsystem.initialize()
         shooterSubsystem.initialize()
 
-        autoChooser.setDefaultOption("red left", autos.redLeft())
-        autoChooser.addOption("red right", autos.redRight())
-        autoChooser.addOption("red mid", autos.redMid())
-
-        autoChooser.addOption("blue left", autos.blueLeft())
-        autoChooser.addOption("blue right", autos.blueRight())
-        autoChooser.addOption("blue mid", autos.blueMid())
-        
-        
-        SmartDashboard.putData("Auto Chooser", autoChooser)
-
         debugSlider.setDefault(0.0)
     }
 
@@ -98,12 +74,10 @@ class RobotContainer {
         // Drivetrain bindings
         drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
             val alliance = DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue)
-            var velX: Double
-            var velY: Double
             val rotationRate = -driverRight.z
             // NEEDS TO RENABLE TELEOP FOR ALLIANCE TO FLIP
-            velX = driverLeft.y
-            velY = -driverLeft.x
+            val velX: Double = driverLeft.y
+            val velY: Double = -driverLeft.x
             SwerveRequest.FieldCentric()
                 .withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
                 .withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
@@ -117,9 +91,6 @@ class RobotContainer {
         operator.trigger().or(driverRight.trigger()).whileTrue(runIntakeCommand())
         operator.middleThumbButton().whileTrue(runOuttakeCommand())
         operator.rightThumbButton().whileTrue(runUnjamCommand())
-        operator.leftBaseBottomRight().onTrue(Commands.runOnce({ targetingSubsystem.mode = TargetingMode.AUTOMATIC }))
-        operator.leftBaseBottomMiddle().onTrue(Commands.runOnce({ targetingSubsystem.mode = TargetingMode.IDLE }))
-        operator.leftBaseBottomRight().toggleOnTrue(shootCommand())
 
 //        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
 //        driverLeft.rightThumbButton().whileTrue(setTurretFieldAngleCommand(Rotation2d(0.0)))
@@ -127,18 +98,13 @@ class RobotContainer {
     }
 
     // Auto
-    private val autos = Autos(drivetrainSubsystem)
-
     fun update() {
-        VisionSubsystem.update()
-        targetingSubsystem.update()
-
         val pose = INSTANCE.getPose()
+
+        // NT Publishing
         xPub.set(pose.x)
         yPub.set(pose.y)
         zPub.set(pose.rotation.degrees)
-        targetNamePub.set(targetingSubsystem.currentTarget.name)
-        currentZonePub.set(targetingSubsystem.currentZone.name)
         poseArrayPub.set(
             doubleArrayOf(
                 pose.x,
@@ -149,11 +115,6 @@ class RobotContainer {
                 0.0
             )
         )
-        debugText.set(targetingSubsystem.mode.toString())
-    }
-
-    fun getAuto(): Command {
-        return autoChooser.selected.cmd()
     }
 
     // global subsystem access via companion object
@@ -174,18 +135,6 @@ class RobotContainer {
     }
 
     fun getYaw(): Rotation2d {
-        return Rotation2d.fromDegrees(drivetrainSubsystem.pigeon2.yaw.valueAsDouble) + VisionSubsystem.pigeonZero
+        return Rotation2d.fromDegrees(drivetrainSubsystem.pigeon2.yaw.valueAsDouble)
     }
-
-    fun getVelocity(): ChassisSpeeds {
-        val robotSpeeds = drivetrainSubsystem.state.Speeds
-        return ChassisSpeeds.fromRobotRelativeSpeeds(robotSpeeds, getYaw())
-    }
-
-    fun getCommandedVelocity(): ChassisSpeeds {
-        val state = drivetrainSubsystem.getStateCopy()
-        val robotRelative = drivetrainSubsystem.kinematics.toChassisSpeeds(*state.ModuleTargets)
-        return ChassisSpeeds.fromRobotRelativeSpeeds(robotRelative, getYaw())
-    }
-
 }

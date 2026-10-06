@@ -3,19 +3,9 @@
 // the WPILib BSD license file in the root directory of this project.
 package com.team2502.robot2026
 
-import com.ctre.phoenix6.Utils
-import com.team2502.robot2026.Constants.Localization.LIMELIGHT_FRONT_NAME
-import com.team2502.robot2026.Constants.Localization.LIMELIGHT_SIDE_NAME
-import com.team2502.robot2026.commands.shootCommand
-import com.team2502.robot2026.subsystems.TargetingSubsystem
-import com.team2502.robot2026.subsystems.VisionSubsystem
-import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
-import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain.*
 import edu.wpi.first.wpilibj.TimedRobot
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
-import edu.wpi.first.wpilibj2.command.Commands
-import java.util.concurrent.atomic.AtomicReference
 
 class Robot : TimedRobot() {
     private var autonomousCommand: Command? = null
@@ -37,7 +27,6 @@ class Robot : TimedRobot() {
     override fun disabledExit() {}
 
     override fun autonomousInit() {
-        autonomousCommand = robotContainer.getAuto()
         CommandScheduler.getInstance().schedule(autonomousCommand)
     }
 
