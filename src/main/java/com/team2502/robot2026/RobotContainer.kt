@@ -11,12 +11,14 @@ import com.team2502.robot2026.Constants.OI
 import com.team2502.robot2026.commands.runIntakeCommand
 import com.team2502.robot2026.commands.runOuttakeCommand
 import com.team2502.robot2026.commands.runUnjamCommand
+import com.team2502.robot2026.commands.setTurretCommand
 import com.team2502.robot2026.commands.shootCommand
 import com.team2502.robot2026.subsystems.IntakeSubsystem
 import com.team2502.robot2026.subsystems.ShooterSubsystem
 import com.team2502.robot2026.subsystems.TurretSubsystem
 import com.team2502.robot2026.subsystems.drive.CommandSwerveDrivetrain
 import com.team2502.robot2026.subsystems.drive.TunerConstants
+import edu.wpi.first.math.MathUtil
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -25,7 +27,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.DoubleSupplier
 import kotlin.jvm.optionals.getOrDefault
+import kotlin.math.PI
 
 class RobotContainer {
     // Joystick mappings
@@ -87,11 +91,15 @@ class RobotContainer {
                 .withRotationalRate(rotationRate * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
         }
 
+        turretSubsystem.defaultCommand = setTurretCommand { MathUtil.applyDeadband(-operator.z, 0.02) }
+
+
         // Bindings
         operator.trigger().or(driverRight.trigger()).whileTrue(runIntakeCommand())
         operator.middleThumbButton().whileTrue(runOuttakeCommand())
         operator.rightThumbButton().whileTrue(runUnjamCommand())
-
+        operator.leftThumbButton().toggleOnTrue(shootCommand({driverLeft.slider}))
+        driverLeft.leftThumbButton().onTrue(drivetrainSubsystem.runOnce { drivetrainSubsystem.seedFieldCentric() })
 //        driverLeft.middleThumbButton().whileTrue(setTurretCommand(Rotation2d(0.0)))
 //        driverLeft.rightThumbButton().whileTrue(setTurretFieldAngleCommand(Rotation2d(0.0)))
         // driverRight.rightThumbButton().whileTrue(VisionUpdateCommand())

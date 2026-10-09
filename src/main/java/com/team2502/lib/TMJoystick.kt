@@ -87,5 +87,5 @@ class TMJoystick(port: Int) : CommandJoystick(port) {
     }
 
     val slider: Double
-        get() = getRawAxis(3)
+        get() = -getRawAxis(3)
 }
