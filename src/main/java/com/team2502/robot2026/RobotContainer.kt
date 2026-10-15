@@ -96,22 +96,22 @@ class RobotContainer {
 
     fun configureBindings() {
         // Drivetrain bindings
-        drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
-            val alliance = DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue)
-            var velX: Double
-            var velY: Double
-            val rotationRate = -driverRight.z
-            // NEEDS TO RENABLE TELEOP FOR ALLIANCE TO FLIP
-            velX = driverLeft.y
-            velY = -driverLeft.x
-            SwerveRequest.FieldCentric()
-                .withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
-                .withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
-                .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
-                .withVelocityX(velX * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND)
-                .withVelocityY(velY * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND)
-                .withRotationalRate(rotationRate * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
-        }
+//        drivetrainSubsystem.defaultCommand = drivetrainSubsystem.applyRequest {
+//            val alliance = DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue)
+//            var velX: Double
+//            var velY: Double
+//            val rotationRate = -driverRight.z
+//            // NEEDS TO RENABLE TELEOP FOR ALLIANCE TO FLIP
+//            velX = driverLeft.y
+//            velY = -driverLeft.x
+//            SwerveRequest.FieldCentric()
+//                .withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
+//                .withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
+//                .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+//                .withVelocityX(velX * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND)
+//                .withVelocityY(velY * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND)
+//                .withRotationalRate(rotationRate * Constants.Drivetrain.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND)
+//        }
 
         // Bindings
         operator.trigger().or(driverRight.trigger()).whileTrue(runIntakeCommand())
