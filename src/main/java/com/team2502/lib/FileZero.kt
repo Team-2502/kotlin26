@@ -1,4 +1,4 @@
-package com.team2502.lib;
+package com.team2502.lib
 
 import java.io.File
 import java.io.IOException
@@ -11,7 +11,7 @@ fun FileZero(
             return@run null
         val content = try {
             readText()
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             return@run null
         }
         return@run content.toDouble()
