@@ -1,91 +1,73 @@
 // stolen from frc 2052 knightcrawlers :)
 package com.team2502.lib
 
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick
-import edu.wpi.first.wpilibj2.command.button.Trigger
+import edu.wpi.first.wpilibj.Joystick
 
-class TMJoystick(port: Int) : CommandJoystick(port) {
+class TMJoystick(port: Int) {
+    private val joystick = Joystick(port)
+
     // --- Stick Buttons ---
-    fun frontTrigger(): Trigger {
-        return button(1)
-    }
+    val trigger: Boolean
+        get() = joystick.getRawButton(1)
 
-    fun middleThumbButton(): Trigger {
-        return button(2)
-    }
+    val middleThumbButton: Boolean
+        get() = joystick.getRawButton(2)
 
-    fun leftThumbButton(): Trigger {
-        return button(3)
-    }
+    val leftThumbButton: Boolean
+        get() = joystick.getRawButton(3)
 
-    fun rightThumbButton(): Trigger {
-        return button(4)
-    }
+    val rightThumbButton: Boolean
+        get() = joystick.getRawButton(4)
 
     // --- Base Buttons (Left Side) ---
-    fun leftBaseTopLeft(): Trigger {
-        return button(5)
-    }
+    val leftBaseTopLeft: Boolean
+        get() = joystick.getRawButton(5)
 
-    fun leftBaseTopMiddle(): Trigger {
-        return button(6)
-    }
+    val leftBaseTopMiddle: Boolean
+        get() = joystick.getRawButton(6)
 
-    fun leftBaseTopRight(): Trigger {
-        return button(7)
-    }
+    val leftBaseTopRight: Boolean
+        get() = joystick.getRawButton(7)
 
-    fun leftBaseBottomLeft(): Trigger {
-        return button(10)
-    }
+    val leftBaseBottomLeft: Boolean
+        get() = joystick.getRawButton(10)
 
-    fun leftBaseBottomMiddle(): Trigger {
-        return button(9)
-    }
+    val leftBaseBottomMiddle: Boolean
+        get() = joystick.getRawButton(9)
 
-    fun leftBaseBottomRight(): Trigger {
-        return button(8)
-    }
+    val leftBaseBottomRight: Boolean
+        get() = joystick.getRawButton(8)
 
     // --- Base Buttons (Right Side) ---
-    fun rightBaseTopLeft(): Trigger {
-        return button(13)
-    }
+    val rightBaseTopLeft: Boolean
+        get() = joystick.getRawButton(13)
 
-    fun rightBaseTopMiddle(): Trigger {
-        return button(12)
-    }
+    val rightBaseTopMiddle: Boolean
+        get() = joystick.getRawButton(12)
 
-    fun rightBaseTopRight(): Trigger {
-        return button(11)
-    }
+    val rightBaseTopRight: Boolean
+        get() = joystick.getRawButton(11)
 
-    fun rightBaseBottomLeft(): Trigger {
-        return button(14)
-    }
+    val rightBaseBottomLeft: Boolean
+        get() = joystick.getRawButton(14)
 
-    fun rightBaseBottomMiddle(): Trigger {
-        return button(15)
-    }
+    val rightBaseBottomMiddle: Boolean
+        get() = joystick.getRawButton(15)
 
-    fun rightBaseBottomRight(): Trigger {
-        return button(16)
-    }
+    val rightBaseBottomRight: Boolean
+        get() = joystick.getRawButton(16)
 
     // --- Axes ---
-    override fun getX(): Double {
-        return getRawAxis(0)
-    }
+    val x: Double
+        get() = joystick.getRawAxis(0)
 
-    override fun getY(): Double {
-        return -getRawAxis(1)
-    }
+    val y: Double
+        get() = -joystick.getRawAxis(1)
 
     /// CCW+
-    override fun getTwist(): Double {
-        return -getRawAxis(2)
-    }
+    val twist: Double
+        get() = -joystick.getRawAxis(2)
 
     val slider: Double
-        get() = getRawAxis(3)
+        get() = joystick.getRawAxis(3)
 }
