@@ -4,12 +4,15 @@ import com.team2502.lib.LimelightHelpers
 import com.team2502.lib.LimelightHelpers.PoseEstimate
 import com.team2502.lib.LimelightHelpers.RawFiducial
 import com.team2502.lib.Localization
+import com.team2502.robot2026.Constants.Dashboard.VISION_LAST_TAG_GREEN_TIMEOUT
+import com.team2502.robot2026.Constants.Dashboard.VISION_LAST_TAG_YELLOW_TIMEOUT
 import com.team2502.robot2026.Constants.Localization.ACCEPTABLE_OUTLIER_COUNT
 import com.team2502.robot2026.Constants.Localization.LIMELIGHT_FRONT_NAME
 import com.team2502.robot2026.Constants.Localization.LIMELIGHT_SIDE_NAME
 import com.team2502.robot2026.Constants.Localization.MAX_LIMELIGHT_POSE_DIFFERENCE_METERS
 import com.team2502.robot2026.Constants.Weights.CHASSIS_XY_STDDEV_COEFFICIENT
 import com.team2502.robot2026.Constants.Weights.DEFAULT_XY_STDDEV
+import com.team2502.robot2026.Constants.Weights.LIMELIGHT_PREVIOUS_TIMESTAMP_EMA
 import com.team2502.robot2026.Constants.Weights.VISION_HEADING_STD_DEV_HARDCODE
 import com.team2502.robot2026.subsystems.drive.TunerConstants
 import edu.wpi.first.math.Matrix
@@ -17,12 +20,19 @@ import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
+import edu.wpi.first.networktables.NetworkTableInstance
 import java.util.*
 import kotlin.math.pow
+import kotlin.math.roundToInt
+import edu.wpi.first.wpilibj.Timer
 
 
 class VisionSubsystem(private val drivetrain: TunerConstants.TunerSwerveDrivetrain) {
-    private var previousEstimateTimestamp = 0.0
+    private var previousEstimateFPGATimestamp = 0.0
+    private var previousTimeDeltaEMA = 0.0
+    private val visionNT = NetworkTableInstance.getDefault().getTable("visionTable")
+    private val previousTimeDeltaPub = visionNT.getStringTopic("previousTimeDelta").publish()
+    private val previousTimeColorPub = visionNT.getStringTopic("previousTimeColor").publish()
 
     var outlierCount = 0
 
@@ -63,6 +73,13 @@ class VisionSubsystem(private val drivetrain: TunerConstants.TunerSwerveDrivetra
         val frontPos = getVisionPose2d(LIMELIGHT_FRONT_NAME)
         val sideStdDev = getStdDev(currentPose, sidePos)
         val frontStdDev = getStdDev(currentPose, frontPos)
+        val timeSinceLastFrame = Timer.getFPGATimestamp() - previousEstimateFPGATimestamp
+        when {
+            (timeSinceLastFrame < VISION_LAST_TAG_GREEN_TIMEOUT) -> previousTimeColorPub.set("green")
+            (timeSinceLastFrame < VISION_LAST_TAG_YELLOW_TIMEOUT) -> previousTimeColorPub.set("yellow")
+            else -> previousTimeColorPub.set("red")
+        }
+        previousTimeDeltaPub.set((1/(previousTimeDeltaEMA + 1e-5)).roundToInt().toString())
 
         val sideFirst = sidePos != null && frontPos != null && sidePos.timestampSeconds < frontPos.timestampSeconds
         if (sideFirst) {
@@ -77,14 +94,23 @@ class VisionSubsystem(private val drivetrain: TunerConstants.TunerSwerveDrivetra
     fun addToFilter(currentPose: Pose2d, pose: PoseEstimate?, stdDev: Matrix<N3, N1>?) {
         if (stdDev != null && pose != null) {
             if (pose.tagCount > 0) {
-                if (pose.timestampSeconds > previousEstimateTimestamp) {
-                    previousEstimateTimestamp = pose.timestampSeconds
+                if (pose.timestampSeconds > previousEstimateFPGATimestamp) {
+                    val timeDelta = pose.timestampSeconds - previousEstimateFPGATimestamp
+                    previousEstimateFPGATimestamp = pose.timestampSeconds
+
+                    println("timeDelta: $timeDelta")
+                    previousTimeDeltaEMA =
+                        previousTimeDeltaEMA * LIMELIGHT_PREVIOUS_TIMESTAMP_EMA +
+                                timeDelta * (1.0 - LIMELIGHT_PREVIOUS_TIMESTAMP_EMA)
+                    println("EMA: $previousTimeDeltaEMA")
+
                     val translationDelta = pose.pose.minus(currentPose)
                     val yawDelta = pose.pose.rotation.minus(currentPose.rotation)
 
                     if (translationDelta.translation.norm > MAX_LIMELIGHT_POSE_DIFFERENCE_METERS
                         || yawDelta.degrees > 90.0
-                        || yawDelta.degrees < -90.0) {
+                        || yawDelta.degrees < -90.0
+                    ) {
                         outlierCount++
 
                         if (outlierCount < ACCEPTABLE_OUTLIER_COUNT) {
