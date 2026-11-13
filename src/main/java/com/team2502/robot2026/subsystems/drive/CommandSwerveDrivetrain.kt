@@ -110,10 +110,6 @@ class CommandSwerveDrivetrain : TunerSwerveDrivetrain, Subsystem {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds))
     }
 
-    fun resetChoreoPose(pose: Pose2d) {
-        super.resetPose(pose)
-    }
-
     companion object {
         /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
         private val kBlueAlliancePerspectiveRotation: Rotation2d = Rotation2d.kZero

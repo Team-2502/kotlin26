@@ -98,11 +98,9 @@ class VisionSubsystem(private val drivetrain: TunerConstants.TunerSwerveDrivetra
                     val timeDelta = pose.timestampSeconds - previousEstimateFPGATimestamp
                     previousEstimateFPGATimestamp = pose.timestampSeconds
 
-                    println("timeDelta: $timeDelta")
                     previousTimeDeltaEMA =
                         previousTimeDeltaEMA * LIMELIGHT_PREVIOUS_TIMESTAMP_EMA +
                                 timeDelta * (1.0 - LIMELIGHT_PREVIOUS_TIMESTAMP_EMA)
-                    println("EMA: $previousTimeDeltaEMA")
 
                     val translationDelta = pose.pose.minus(currentPose)
                     val yawDelta = pose.pose.rotation.minus(currentPose.rotation)

@@ -281,7 +281,7 @@ abstract class CoroutineRobot : IterativeRobotBase(WATCHDOG_TIMEOUT.toDouble(Dur
 			runCommand(autoFactory.trajectoryCmd(trajectoryName))
 		}
 
-		private suspend fun runCommand(command: Command, period: Duration = 20.milliseconds) {
+		suspend fun runCommand(command: Command, period: Duration = 20.milliseconds) {
 			var interrupted = true
 			val loopStart = System.nanoTime()
 			val periodNs = period.inWholeNanoseconds

@@ -13,89 +13,100 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj2.command.Subsystem
+import frc.robot.lib.BLine.FollowPath
 
 class DrivetrainSubsystem : CoroutineSubsystem {
-	var speedLimit: SpeedLimiter? = null
+    var speedLimit: SpeedLimiter? = null
 
-	private val drivetrainSubsystem: CommandSwerveDrivetrain = TunerConstants.createDrivetrain()
-	private val vision = VisionSubsystem(drivetrainSubsystem)
+    private val drivetrainSubsystem: CommandSwerveDrivetrain = TunerConstants.createDrivetrain()
+    private val vision = VisionSubsystem(drivetrainSubsystem)
 
-	val choreoXController = PIDController(5.0, 0.0, 0.0)
-	val choreoYController = PIDController(5.0, 0.0, 0.0)
-	val choreoThetaController = PIDController(5.0, 0.0, 0.0)
+    val choreoXController = PIDController(5.0, 0.0, 0.0)
+    val choreoYController = PIDController(5.0, 0.0, 0.0)
+    val choreoThetaController = PIDController(5.0, 0.0, 0.0)
 
-	private val driveNT = NetworkTableInstance.getDefault().getTable("driveSubsystemTable")
-	private val statePub = driveNT.getStringTopic("state").publish()
-	private val xPub = driveNT.getDoubleTopic("velX").publish()
-	private val yPub = driveNT.getDoubleTopic("velY").publish()
-	private val rotationPub = driveNT.getDoubleTopic("rotationRate").publish()
+    private val driveNT = NetworkTableInstance.getDefault().getTable("driveSubsystemTable")
+    private val statePub = driveNT.getStringTopic("state").publish()
+    private val xPub = driveNT.getDoubleTopic("velX").publish()
+    private val yPub = driveNT.getDoubleTopic("velY").publish()
+    private val rotationPub = driveNT.getDoubleTopic("rotationRate").publish()
 
-	private var state = "INITIALIZED"
-	private val driveRequestBase = SwerveRequest.FieldCentric()
-		.withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
-		.withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
-		.withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+    private var state = "INITIALIZED"
+    private val driveRequestBase = SwerveRequest.FieldCentric()
+        .withDeadband(OI.TRANSLATION_DEADBAND_METERS_PER_SECOND)
+        .withRotationalDeadband(OI.ROTATION_DEADBAND_RADIANS_PER_SECOND)
+        .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
 
-	val subsystem: Subsystem = drivetrainSubsystem
+    val subsystem: Subsystem = drivetrainSubsystem
 
-	init {
-		choreoThetaController.enableContinuousInput(-Math.PI, Math.PI)
-		drivetrainSubsystem.registerTelemetry { state ->
-			val robotRelative = drivetrainSubsystem.kinematics.toChassisSpeeds(*state.ModuleTargets)
-			val commanded = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelative, state.Pose.rotation)
-			Localization.setPose(state.clone(), commanded)
-		}
-	}
+    init {
+        choreoThetaController.enableContinuousInput(-Math.PI, Math.PI)
+        drivetrainSubsystem.registerTelemetry { state ->
+            val robotRelative = drivetrainSubsystem.kinematics.toChassisSpeeds(*state.ModuleTargets)
+            val commanded = ChassisSpeeds.fromRobotRelativeSpeeds(robotRelative, state.Pose.rotation)
+            Localization.setPose(state.clone(), commanded)
+        }
+    }
 
-	override fun periodic() {
-		drivetrainSubsystem.periodic()
-		vision.update()
+    override fun periodic() {
+        drivetrainSubsystem.periodic()
+        vision.update()
 
-		statePub.set(state)
-		xPub.set(driveRequestBase.VelocityX)
-		yPub.set(driveRequestBase.VelocityY)
-		rotationPub.set(driveRequestBase.RotationalRate)
-	}
+        statePub.set(state)
+        xPub.set(driveRequestBase.VelocityX)
+        yPub.set(driveRequestBase.VelocityY)
+        rotationPub.set(driveRequestBase.RotationalRate)
+    }
 
-	override fun stop() {
-		state = "STOPPED"
-		drivetrainSubsystem.setControl(SwerveRequest.SwerveDriveBrake())
-	}
+    override fun stop() {
+        state = "STOPPED"
+        drivetrainSubsystem.setControl(SwerveRequest.SwerveDriveBrake())
+    }
 
-	fun resetChoreoPose(pose: Pose2d) {
-		drivetrainSubsystem.resetChoreoPose(pose)
-	}
+    fun resetPose(pose: Pose2d) {
+        drivetrainSubsystem.resetPose(pose)
+    }
 
-	fun followTrajectory(sample: SwerveSample) {
-		state = "DRIVE_AUTO"
-		val pose = drivetrainSubsystem.state.Pose
+    fun followTrajectory(sample: SwerveSample) {
+        state = "DRIVE_AUTO"
+        val pose = drivetrainSubsystem.state.Pose
 
-		val vx = sample.vx + choreoXController.calculate(pose.x, sample.x)
-		val vy = sample.vy + choreoYController.calculate(pose.y, sample.y)
-		val omega = sample.omega + choreoThetaController.calculate(pose.rotation.radians, sample.heading)
+        val vx = sample.vx + choreoXController.calculate(pose.x, sample.x)
+        val vy = sample.vy + choreoYController.calculate(pose.y, sample.y)
+        val omega = sample.omega + choreoThetaController.calculate(pose.rotation.radians, sample.heading)
 
-		drivetrainSubsystem.setControl(
-			SwerveRequest.FieldCentric()
-				.withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
-				.withVelocityX(vx)
-				.withVelocityY(vy)
-				.withRotationalRate(omega)
-				.withForwardPerspective(SwerveRequest.ForwardPerspectiveValue.BlueAlliance)
-		)
-	}
+        drivetrainSubsystem.setControl(
+            SwerveRequest.FieldCentric()
+                .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+                .withVelocityX(vx)
+                .withVelocityY(vy)
+                .withRotationalRate(omega)
+                .withForwardPerspective(SwerveRequest.ForwardPerspectiveValue.BlueAlliance)
+        )
+    }
 
-	fun driveDirection(velX: Double, velY: Double, rotationRate: Double) {
-		if (speedLimit != null) {
-			// TODO: limit velX, velY
-		}
-		state = "DRIVE_DIRECTION"
-		drivetrainSubsystem.setControl(
-			driveRequestBase
-				.withVelocityX(velX)
-				.withVelocityY(velY)
-				.withRotationalRate(rotationRate)
-		)
-	}
+    fun driveDirection(velX: Double, velY: Double, rotationRate: Double) {
+        if (speedLimit != null) {
+            // TODO: limit velX, velY
+        }
+        state = "DRIVE_DIRECTION"
+        drivetrainSubsystem.setControl(
+            driveRequestBase
+                .withVelocityX(velX)
+                .withVelocityY(velY)
+                .withRotationalRate(rotationRate)
+        )
+    }
 
-	class SpeedLimiter(val directionX: Double, val directionY: Double)
+    fun driveRobotRelative(speeds: ChassisSpeeds) {
+        state = "DRIVE_ROBOT_RELATIVE"
+        drivetrainSubsystem.setControl(
+            SwerveRequest.RobotCentric()
+                .withVelocityX(speeds.vxMetersPerSecond)
+                .withVelocityY(speeds.vyMetersPerSecond)
+                .withRotationalRate(speeds.omegaRadiansPerSecond)
+        )
+    }
+
+    class SpeedLimiter(val directionX: Double, val directionY: Double)
 }

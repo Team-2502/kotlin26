@@ -1,7 +1,7 @@
 package com.team2502.robot2026.subsystems
 
 import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.controls.VelocityDutyCycle
+import com.ctre.phoenix6.controls.VelocityVoltage
 import com.team2502.lib.CoroutineSubsystem
 import com.team2502.lib.FileZero
 import com.team2502.lib.config.create
@@ -33,7 +33,7 @@ class ShooterSubsystem : CoroutineSubsystem {
     private val turretEncoder = TURRET_ENCODER.create()
 
     private var state = "INITIALIZED"
-    private val shooterVelocityDutyCycleRequest = VelocityDutyCycle(0.0)
+    private val shooterVelocityDutyCycleRequest = VelocityVoltage(0.0)
     private val shooterPositionRequest = PositionVoltage(0.0)
     private val turretPositionRequest = PositionVoltage(0.0)
 
