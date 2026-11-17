@@ -22,7 +22,6 @@ import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 
-
 class AutonomousControl(private val robotContainer: RobotContainer) {
     val pathBuilder = FollowPath.Builder(
         robotContainer.drivetrain.subsystem,
