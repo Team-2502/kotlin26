@@ -7,7 +7,6 @@ import java.util.PriorityQueue
 import javax.swing.UIManager.put
 import kotlin.math.PI
 
-/// THESE IDS NEED TO BE UNIQUE - THEY ARE THE IDs USED IN THE DISTANCE ARRAY FOR DJIKSTRA'S
 // TODO: make rotation intelligent: can be optional, whitelist, or blacklist
 enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
     A(Translation2d(0.0, 0.0), Rotation2d(PI)),
@@ -17,7 +16,6 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
 
     fun cost(target: Nodes): Double {
         val distanceDelta = target.translation.getDistance(this.translation)
-        println("[TESTS]: cost function: $this to $target: $distanceDelta")
         val angleDelta = target.rotation - this.rotation
 
         return distanceDelta
@@ -55,7 +53,7 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
 
             while (queue.isNotEmpty()) {
                 val current = queue.poll() ?: run {
-                    println("Queue empty on start")
+                    println("[NODE WARNING]: findPath: Queue empty on start")
                     break
                 }
 
