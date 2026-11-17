@@ -17,6 +17,7 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
 
     fun cost(target: Nodes): Double {
         val distanceDelta = target.translation.getDistance(this.translation)
+        println("[TESTS]: cost function: $this to $target: $distanceDelta")
         val angleDelta = target.rotation - this.rotation
 
         return distanceDelta
@@ -25,11 +26,13 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
     private val _connections = mutableListOf<Nodes>()
     private fun connectTo(vararg targets: Nodes) {
         for (target in targets) {
-            if (target != this && target !in _connections) {
-                _connections.add(target)
-            }
-            if (this != target && this !in target._connections) {
-                target._connections.add(this)
+            if (this != target) {
+                if (target !in this._connections) this._connections += target else
+                    println("[NODES WARNING]: connectTo: target already in this.connections: this: $this target: $target")
+                if (this !in target._connections) target._connections += this else
+                    println("[NODES WARNING]: connectTo: this already in target.connections: this: $this target: $target")
+            } else {
+                println("[NODES WARNING]: connectTo: node told connect to itself: this: $this, target: $target")
             }
         }
     }
@@ -37,7 +40,8 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
     companion object {
         init {
             A.connectTo(B, C)
-            A.connectTo(B)
+            B.connectTo(C, D)
+            C.connectTo(D)
         }
 
         fun findPath(start: Nodes, goal: Nodes): List<Nodes> {
