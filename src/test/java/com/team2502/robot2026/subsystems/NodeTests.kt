@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 class NodeTests {
     @Test
     fun `pathfinder test`() {
-        val actual = findPath(A,D)
-        val expected = listOf(A, C, D)
+        val actual = findPath(A,E)
+        val expected = listOf(A, B, C, D, E)
         println("[TESTS]: expected: $expected, actual: $actual")
         assertEquals(expected,actual)
     }

@@ -10,9 +10,11 @@ import kotlin.math.PI
 // TODO: make rotation intelligent: can be optional, whitelist, or blacklist
 enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
     A(Translation2d(0.0, 0.0), Rotation2d(PI)),
-    B(Translation2d(1.0, 1.0), Rotation2d(PI)),
-    C(Translation2d(1.0, 0.0), Rotation2d(PI)),
-    D(Translation2d(3.0, 0.0), Rotation2d(PI));
+    B(Translation2d(1.0, 2.0), Rotation2d(PI)),
+    C(Translation2d(1.0, 1.0), Rotation2d(PI)),
+    D(Translation2d(1.0, 0.0), Rotation2d(PI)),
+    E(Translation2d(1.0, -2.0), Rotation2d(PI)),
+    F(Translation2d(4.0, 0.0), Rotation2d(PI));
 
     fun cost(target: Nodes): Double {
         val distanceDelta = target.translation.getDistance(this.translation)
@@ -21,14 +23,16 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
         return distanceDelta
     }
 
-    private val _connections = mutableListOf<Nodes>()
+    private val _connections = mutableSetOf<Nodes>()
+    val connections: Set<Nodes>
+        get() = _connections
+
     private fun connectTo(vararg targets: Nodes) {
         for (target in targets) {
             if (this != target) {
-                if (target !in this._connections) this._connections += target else
-                    println("[NODES WARNING]: connectTo: target already in this.connections: this: $this target: $target")
-                if (this !in target._connections) target._connections += this else
+                if (!this._connections.add(target))
                     println("[NODES WARNING]: connectTo: this already in target.connections: this: $this target: $target")
+                target._connections.add(this)
             } else {
                 println("[NODES WARNING]: connectTo: node told connect to itself: this: $this, target: $target")
             }
@@ -37,9 +41,11 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
 
     companion object {
         init {
-            A.connectTo(B, C)
-            B.connectTo(C, D)
+            A.connectTo(B)
+            B.connectTo(C)
             C.connectTo(D)
+            D.connectTo(E)
+            E.connectTo(F)
         }
 
         fun findPath(start: Nodes, goal: Nodes): List<Nodes> {
@@ -93,9 +99,6 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
             return path.reversed()
         }
     }
-
-    val connections: List<Nodes>
-        get() = _connections
 }
 
 
