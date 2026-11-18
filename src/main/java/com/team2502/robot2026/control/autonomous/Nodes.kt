@@ -9,12 +9,22 @@ import kotlin.math.PI
 
 // TODO: make rotation intelligent: can be optional, whitelist, or blacklist
 enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
-    A(Translation2d(0.0, 0.0), Rotation2d(PI)),
-    B(Translation2d(1.0, 2.0), Rotation2d(PI)),
-    C(Translation2d(1.0, 1.0), Rotation2d(PI)),
-    D(Translation2d(1.0, 0.0), Rotation2d(PI)),
-    E(Translation2d(1.0, -2.0), Rotation2d(PI)),
-    F(Translation2d(4.0, 0.0), Rotation2d(PI));
+    A(Translation2d(1.673, 2.582), Rotation2d(PI)),
+    B(Translation2d(3.462, 0.644), Rotation2d(PI)),
+    C(Translation2d(1.673, 4.909), Rotation2d(PI)),
+    D(Translation2d(1.253, 7.063), Rotation2d(PI)),
+    E(Translation2d(3.462, 7.426), Rotation2d(PI)),
+    F(Translation2d(3.462, 4.035), Rotation2d(PI)),
+    G(Translation2d(5.789, 7.426), Rotation2d(PI)),
+    H(Translation2d(5.789, 0.644), Rotation2d(PI)),
+    I(Translation2d(10.752, 0.644), Rotation2d(PI)),
+    J(Translation2d(10.752, 7.426), Rotation2d(PI)),
+    K(Translation2d(13.079, 7.426), Rotation2d(PI)),
+    L(Translation2d(13.079, 4.035), Rotation2d(PI)),
+    M(Translation2d(13.079, 0.644), Rotation2d(PI)),
+    N(Translation2d(14.868, 5.487), Rotation2d(PI)),
+    O(Translation2d(14.868, 3.16), Rotation2d(PI)),
+    P(Translation2d(15.288, 1.006), Rotation2d(PI));
 
     fun cost(target: Nodes): Double {
         val distanceDelta = target.translation.getDistance(this.translation)
@@ -41,11 +51,18 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
 
     companion object {
         init {
-            A.connectTo(B)
-            B.connectTo(C)
-            C.connectTo(D)
-            D.connectTo(E)
-            E.connectTo(F)
+            A.connectTo(B, F, C, E)
+            C.connectTo(B, E)
+            D.connectTo(B, C, E, F)
+            F.connectTo(B, C, E)
+            G.connectTo(E, J, I)
+            H.connectTo(B, G, J, I)
+            I.connectTo(J, M)
+            J.connectTo(K)
+            K.connectTo(N, L, O, P)
+            L.connectTo(N, P)
+            M.connectTo(L, P, N)
+            O.connectTo(K, L, M, N, P)
         }
 
         fun findPath(start: Nodes, goal: Nodes): List<Nodes> {
