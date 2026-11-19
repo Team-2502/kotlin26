@@ -29,14 +29,11 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
     O(Translation2d(14.868, 3.16), Rotation2d(PI)),
     P(Translation2d(15.288, 1.006), Rotation2d(PI));
 
-    fun cost(target: Nodes, goal: Translation2d, goalYaw: Rotation2d): Double {
+    fun cost(target: Nodes): Double {
         val distanceDelta = target.translation.getDistance(this.translation)
         val yawDelta = target.rotation - this.rotation
 
-        val goalDistanceDelta = target.translation.getDistance(goal)
-        val goalYawDelta = target.rotation - this.rotation
-
-        return distanceDelta + goalDistanceDelta
+        return distanceDelta
     }
 
     private val _connections = mutableSetOf<Nodes>()
@@ -163,7 +160,12 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
                 Nodes.entries.forEach { put(it, Double.POSITIVE_INFINITY) }
             }
             val cameFrom = EnumMap<Nodes, Nodes>(Nodes::class.java)
-            val queue = PriorityQueue<Nodes>(compareBy { distances[it] })
+            val queue = PriorityQueue<Nodes>(
+                compareBy {
+                    distances.getValue(it) + it.translation.getDistance(goal)
+                }
+            )
+
             for (node in Nodes.entries) {
                 if (isStraightLinePossible(start, node.translation)) {
                     distances[node] = start.getDistance(node.translation)
@@ -186,7 +188,7 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
                 val currentDist = distances[current] ?: Double.POSITIVE_INFINITY
 
                 for (neighbor in current.connections) {
-                    val newDist = currentDist + current.cost(neighbor, goal, goalYaw)
+                    val newDist = currentDist + current.cost(neighbor)
                     val currentBestDist = distances[neighbor] ?: Double.POSITIVE_INFINITY
 
                     if (newDist < currentBestDist) {
