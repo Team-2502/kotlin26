@@ -98,9 +98,25 @@ def generateKotlinCode():
     for k, v in graph.items():
         print(k + "(Translation2d(" + str(v[0][0]) + ", " + str(v[0][1]) + "), Rotation2d(PI)),")
     print()
+
     for k, v in graph.items():
         if len(v[1])>= 1:
             print(k + ".connectTo(" + ", ".join(v[1]) + ")")
+    print()
+
+
+    print("val objectEdges = listOf(")
+    for obj in keepout:
+        for i in range(len(obj)):
+            p1 = obj[i]
+            p2 = obj[(i + 1) % len(obj)]
+
+            print(
+                f"    Pair(Translation2d({p1[0]}, {p1[1]}), "
+                f"Translation2d({p2[0]}, {p2[1]})),"
+            )
+
+    print(")")
 
 def draw(image, graph_points, keepout_points, alpha=0.23):
     width, height = image.size
@@ -143,21 +159,21 @@ def draw(image, graph_points, keepout_points, alpha=0.23):
 
 
 def main():
-    image = Image.open(pathlib.Path(__file__).parent / "image.png").convert("RGB")
-    keepout_points = []
-    graph_points = dict()
-    field_width = 650.12 / 12 / 3.28084
-    field_height = 316.64 / 12 / 3.28084
-    for points in keepout:
-        poly = []
-        for (x, y) in points:
-            new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
-            poly.append(new_loc)
-        keepout_points.append(poly)
-    for k, ((x, y), connected) in graph.items():
-        new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
-        graph_points[k] = (new_loc, connected)
-    draw(image, graph_points, keepout_points, 0.23)
+    # image = Image.open(pathlib.Path(__file__).parent / "image.png").convert("RGB")
+    # keepout_points = []
+    # graph_points = dict()
+    # field_width = 650.12 / 12 / 3.28084
+    # field_height = 316.64 / 12 / 3.28084
+    # for points in keepout:
+    #     poly = []
+    #     for (x, y) in points:
+    #         new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
+    #         poly.append(new_loc)
+    #     keepout_points.append(poly)
+    # for k, ((x, y), connected) in graph.items():
+    #     new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
+    #     graph_points[k] = (new_loc, connected)
+    # draw(image, graph_points, keepout_points, 0.23)
     generateKotlinCode()
 
 

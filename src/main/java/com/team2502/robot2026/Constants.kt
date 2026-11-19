@@ -93,4 +93,8 @@ class Constants {
         const val VISION_LAST_TAG_GREEN_TIMEOUT = 1.0
         const val VISION_LAST_TAG_YELLOW_TIMEOUT = 5.0
     }
+
+    object Auto {
+        const val PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS = 0.9144
+    }
 }
