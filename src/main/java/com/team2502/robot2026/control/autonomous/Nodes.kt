@@ -3,9 +3,9 @@ package com.team2502.robot2026.control.autonomous
 import com.team2502.robot2026.Constants.Auto.PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
+import org.jetbrains.annotations.VisibleForTesting
 import java.util.EnumMap
 import java.util.PriorityQueue
-import javax.swing.UIManager.put
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
@@ -29,11 +29,14 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
     O(Translation2d(14.868, 3.16), Rotation2d(PI)),
     P(Translation2d(15.288, 1.006), Rotation2d(PI));
 
-    fun cost(target: Nodes): Double {
+    fun cost(target: Nodes, goal: Translation2d, goalYaw: Rotation2d): Double {
         val distanceDelta = target.translation.getDistance(this.translation)
-        val angleDelta = target.rotation - this.rotation
+        val yawDelta = target.rotation - this.rotation
 
-        return distanceDelta
+        val goalDistanceDelta = target.translation.getDistance(goal)
+        val goalYawDelta = target.rotation - this.rotation
+
+        return distanceDelta + goalDistanceDelta
     }
 
     private val _connections = mutableSetOf<Nodes>()
@@ -81,21 +84,21 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
         )
 
         init {
-            A.connectTo(B, F, C, E)
+            A.connectTo(B, C, E)
             C.connectTo(B, E)
-            D.connectTo(B, C, E, F)
-            F.connectTo(B, C, E)
+            D.connectTo(B, C, E)
+            E.connectTo(B)
             G.connectTo(E, J, I)
             H.connectTo(B, G, J, I)
             I.connectTo(J, M)
             J.connectTo(K)
-            K.connectTo(N, L, O, P)
-            L.connectTo(N, P)
-            M.connectTo(L, P, N)
-            O.connectTo(K, L, M, N, P)
+            K.connectTo(N, P)
+            M.connectTo(P, N, K)
+            O.connectTo(K, M, N, P)
         }
 
-        private fun closestSquaredDistToLine(
+        @VisibleForTesting
+        internal fun closestSquaredDistToLine(
             point: Translation2d,
             lineStart: Translation2d,
             lineEnd: Translation2d
@@ -110,7 +113,8 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
             return (point - projected).squaredNorm
         }
 
-        private fun intersectsWall(
+        @VisibleForTesting
+        internal fun intersectsWall(
             pathStart: Translation2d,
             pathEnd: Translation2d,
             wallStart: Translation2d,
@@ -126,53 +130,48 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
             val pathVec = pathEnd - pathStart
             val objectVec = wallEnd - wallStart
 
-            val o1 = pathVec.dot(wallStart - pathStart)
-            val o2 = pathVec.dot(wallEnd - pathStart)
-            val o3 = objectVec.dot(pathStart - wallStart)
-            val o4 = objectVec.dot(pathEnd - wallStart)
+            val o1 = pathVec.cross(wallStart - pathStart)
+            val o2 = pathVec.cross(wallEnd - pathStart)
+            val o3 = objectVec.cross(pathStart - wallStart)
+            val o4 = objectVec.cross(pathEnd - wallStart)
 
             return (((o1 > 0) and (o2 < 0)) or ((o1 < 0) and (o2 > 0))) and (((o3 > 0) and (o4 < 0)) or ((o3 < 0) and (o4 > 0)))
         }
 
-        fun isStraightLinePossible(start: Translation2d, end: Translation2d, minDistance: Double): Boolean {
+        fun isStraightLinePossible(
+            start: Translation2d,
+            end: Translation2d,
+            minDistance: Double = PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS
+        ): Boolean {
             for (edge in objectEdges) {
                 if (intersectsWall(start, end, edge.first, edge.second, minDistance)) return false
             }
             return true
         }
 
-        fun findPath(start: Translation2d, goal: Translation2d): List<Nodes> {
-            val startToNodeDistances = EnumMap<Nodes, Double>(Nodes::class.java).apply {
-                Nodes.entries.forEach { node ->
-                    put(node, start.getDistance(node.translation))
-                }
+        fun findPath(
+            start: Translation2d,
+            startYaw: Rotation2d,
+            goal: Translation2d,
+            goalYaw: Rotation2d
+        ): List<Pair<Translation2d, Rotation2d>> {
+            if (isStraightLinePossible(start, goal)) {
+                return listOf(Pair(start, startYaw), Pair(goal, goalYaw))
             }
-            val closestNodeList = PriorityQueue<Nodes>(compareBy { startToNodeDistances[it] })
-            closestNodeList.addAll(Nodes.entries)
-
-            var tempStartNode: Nodes? = null
-            while (closestNodeList.isNotEmpty()) {
-                val node = closestNodeList.poll()
-
-                if (isStraightLinePossible(
-                        start,
-                        node.translation,
-                        PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS
-                    )
-                ) {
-                    tempStartNode = node
-                    break
-                }
-            }
-            val startNode = tempStartNode ?: return emptyList()
 
             val distances = EnumMap<Nodes, Double>(Nodes::class.java).apply {
                 Nodes.entries.forEach { put(it, Double.POSITIVE_INFINITY) }
-                put(startNode, start.getDistance(startNode.translation))
             }
             val cameFrom = EnumMap<Nodes, Nodes>(Nodes::class.java)
             val queue = PriorityQueue<Nodes>(compareBy { distances[it] })
-            queue.add(startNode)
+            for (node in Nodes.entries) {
+                if (isStraightLinePossible(start, node.translation)) {
+                    distances[node] = start.getDistance(node.translation)
+                    queue.add(node)
+                }
+            }
+
+            println("queue: $queue")
 
             while (queue.isNotEmpty()) {
                 val current = queue.poll() ?: run {
@@ -180,14 +179,14 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
                     break
                 }
 
-                if (isStraightLinePossible(current.translation, goal, PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS)) {
-                    return reconstructPath(cameFrom, current)
+                if (isStraightLinePossible(current.translation, goal)) {
+                    return reconstructPath(cameFrom, current, start, startYaw, goal, goalYaw)
                 }
 
                 val currentDist = distances[current] ?: Double.POSITIVE_INFINITY
 
                 for (neighbor in current.connections) {
-                    val newDist = currentDist + current.cost(neighbor)
+                    val newDist = currentDist + current.cost(neighbor, goal, goalYaw)
                     val currentBestDist = distances[neighbor] ?: Double.POSITIVE_INFINITY
 
                     if (newDist < currentBestDist) {
@@ -204,15 +203,23 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
             return emptyList()
         }
 
-        private fun reconstructPath(cameFrom: Map<Nodes, Nodes>, goal: Nodes): List<Nodes> {
-            val path = mutableListOf(goal)
-            var current = goal
+        private fun reconstructPath(
+            cameFrom: Map<Nodes, Nodes>,
+            lastNode: Nodes,
+            start: Translation2d,
+            startYaw: Rotation2d,
+            goal: Translation2d,
+            goalYaw: Rotation2d
+        ): List<Pair<Translation2d, Rotation2d>> {
+            val path = mutableListOf(Pair(goal, goalYaw), Pair(lastNode.translation, lastNode.rotation))
+            var current = lastNode
 
             while (cameFrom.containsKey(current)) {
                 current = cameFrom.getValue(current)
-                path.add(current)
+                path.add(Pair(current.translation, current.rotation))
             }
 
+            path.add(Pair(start, startYaw))
             return path.reversed()
         }
     }

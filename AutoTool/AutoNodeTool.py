@@ -23,7 +23,7 @@ graph = {
     "J": ((10.752, 7.426), ["K"]),
 
     # Red
-    "K": ((13.079, 7.426), ["N", "O", "P"]),
+    "K": ((13.079, 7.426), ["N", "P"]),
     "M": ((13.079, 0.644), ["P", "N", "K"]),
     "N": ((14.868, 5.487), []),
     "O": ((14.868, 3.160), ["K", "M", "N", "P"]),
@@ -32,7 +32,7 @@ graph = {
 for k, v in graph.items():
     other_nodes = v[1]
     for node in other_nodes:
-        assert k not in graph[node]
+        assert k not in graph[node][1]
 robot_edge = 34.65 / 12 / 3.28084
 ramp_half_width = 0.6
 keepout = [
@@ -159,21 +159,21 @@ def draw(image, graph_points, keepout_points, alpha=0.23):
 
 
 def main():
-    # image = Image.open(pathlib.Path(__file__).parent / "image.png").convert("RGB")
-    # keepout_points = []
-    # graph_points = dict()
-    # field_width = 650.12 / 12 / 3.28084
-    # field_height = 316.64 / 12 / 3.28084
-    # for points in keepout:
-    #     poly = []
-    #     for (x, y) in points:
-    #         new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
-    #         poly.append(new_loc)
-    #     keepout_points.append(poly)
-    # for k, ((x, y), connected) in graph.items():
-    #     new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
-    #     graph_points[k] = (new_loc, connected)
-    # draw(image, graph_points, keepout_points, 0.23)
+    image = Image.open(pathlib.Path(__file__).parent / "image.png").convert("RGB")
+    keepout_points = []
+    graph_points = dict()
+    field_width = 650.12 / 12 / 3.28084
+    field_height = 316.64 / 12 / 3.28084
+    for points in keepout:
+        poly = []
+        for (x, y) in points:
+            new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
+            poly.append(new_loc)
+        keepout_points.append(poly)
+    for k, ((x, y), connected) in graph.items():
+        new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
+        graph_points[k] = (new_loc, connected)
+    draw(image, graph_points, keepout_points, 0.23)
     generateKotlinCode()
 
 
