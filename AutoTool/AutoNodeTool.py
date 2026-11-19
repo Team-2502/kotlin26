@@ -10,23 +10,23 @@ from PIL import Image
 
 graph = {
     # Blue
-    "A": ((1.673, 2.582), ["B", "F", "C", "E"]),
+    "A": ((1.673, 2.582), ["B", "C", "E"]),
     "B": ((3.462, 0.644), []),
     "C": ((1.673, 4.909), ["B", "E"]),
-    "D": ((1.253, 7.063), ["B", "C", "E", "F"]),
-    "E": ((3.462, 7.426), []),
-    "F": ((3.462, 4.035), ["B", "C", "E"]),
+    "D": ((1.253, 7.063), ["B", "C", "E"]),
+    "E": ((3.462, 7.426), ["B"]),
+
     # Middle
     "G": ((5.789, 7.426), ["E", "J", "I"]),
     "H": ((5.789, 0.644), ["B", "G", "J", "I"]),
     "I": ((10.752, 0.644), ["J", "M"]),
     "J": ((10.752, 7.426), ["K"]),
+
     # Red
-    "K": ((13.079, 7.426), ["N", "L", "O", "P"]),
-    "L": ((13.079, 4.035), ["N", "P"]),
-    "M": ((13.079, 0.644), ["L", "P", "N"]),
+    "K": ((13.079, 7.426), ["N", "O", "P"]),
+    "M": ((13.079, 0.644), ["P", "N", "K"]),
     "N": ((14.868, 5.487), []),
-    "O": ((14.868, 3.160), ["K", "L", "M", "N", "P"]),
+    "O": ((14.868, 3.160), ["K", "M", "N", "P"]),
     "P": ((15.288, 1.006), []),
 }
 for k, v in graph.items():
@@ -143,21 +143,21 @@ def draw(image, graph_points, keepout_points, alpha=0.23):
 
 
 def main():
-#     image = Image.open(pathlib.Path(__file__).parent / "image.png").convert("RGB")
-#     keepout_points = []
-#     graph_points = dict()
-#     field_width = 650.12 / 12 / 3.28084
-#     field_height = 316.64 / 12 / 3.28084
-#     for points in keepout:
-#         poly = []
-#         for (x, y) in points:
-#             new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
-#             poly.append(new_loc)
-#         keepout_points.append(poly)
-#     for k, ((x, y), connected) in graph.items():
-#         new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
-#         graph_points[k] = (new_loc, connected)
-#     draw(image, graph_points, keepout_points, 0.23)
+    image = Image.open(pathlib.Path(__file__).parent / "image.png").convert("RGB")
+    keepout_points = []
+    graph_points = dict()
+    field_width = 650.12 / 12 / 3.28084
+    field_height = 316.64 / 12 / 3.28084
+    for points in keepout:
+        poly = []
+        for (x, y) in points:
+            new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
+            poly.append(new_loc)
+        keepout_points.append(poly)
+    for k, ((x, y), connected) in graph.items():
+        new_loc = (1.0 - x / field_width) * image.width, y / field_height * image.height
+        graph_points[k] = (new_loc, connected)
+    draw(image, graph_points, keepout_points, 0.23)
     generateKotlinCode()
 
 

@@ -1,7 +1,6 @@
 package com.team2502.robot2026.control.autonomous
 
 import choreo.auto.AutoFactory
-import com.team2502.lib.CoroutineRobot.Companion.runCommand
 import com.team2502.lib.Localization
 import com.team2502.lib.Localization.awaitNewPose
 import com.team2502.robot2026.control.common.FieldTarget
@@ -17,7 +16,6 @@ import frc.robot.lib.BLine.FollowPath
 import frc.robot.lib.BLine.Path
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.time.delay
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
@@ -58,6 +56,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     private val kPSub = autonNT.getDoubleTopic("kP").getEntry(0.0)
     private val kISub = autonNT.getDoubleTopic("kI").getEntry(0.0)
     private val kDSub = autonNT.getDoubleTopic("kD").getEntry(0.0)
+    private val errorPub = autonNT.getDoubleTopic("error").publish()
 
 
 //// Builder options persist. Clear this before building any later path command.
@@ -68,22 +67,75 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         kPSub.setDefault(0.0)
         kISub.setDefault(0.0)
         kDSub.setDefault(0.0)
+        errorPub.setDefault(0.0)
     }
 
     private suspend fun testPID() {
         while (true) {
-            turnTo(Rotation2d.fromDegrees(0.0))
+            shuffleX(3.0)
             delay(1000.milliseconds)
-            turnTo(Rotation2d.fromDegrees(90.0))
+            shuffleX(-3.0)
             delay(1000.milliseconds)
-            turnTo(Rotation2d.fromDegrees(-90.0))
-            delay(1000.milliseconds)
-            turnTo(Rotation2d.fromDegrees(0.0))
+        }
+    }
+
+    private suspend fun shuffleY(delta: Double) {
+        awaitNewPose()
+        val startingY = Localization.getCurrentPose()?.pose?.translation?.y ?: return
+        val setpoint = startingY + delta
+        val controller = PIDController(kPSub.get(), kISub.get(), kDSub.get())
+        try {
+            var goodPoses = 0
+            while (true) {
+                val pose = awaitNewPose() ?: break
+                val error = pose.pose.translation.y - setpoint
+                errorPub.set(error)
+                if (error.absoluteValue < 0.05) {
+                    goodPoses++
+                } else {
+                    goodPoses = 0
+                }
+                if (goodPoses > 20) {
+                    break
+                }
+                val gain = controller.calculate(pose.pose.translation.y, setpoint)
+                robotContainer.drivetrain.driveDirection(0.0, -gain, 0.0)
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+        }
+    }
+
+    private suspend fun shuffleX(delta: Double) {
+        awaitNewPose()
+        val startingX = Localization.getCurrentPose()?.pose?.translation?.x ?: return
+        val setpoint = startingX + delta
+        // TODO: Make this + other one constants
+        val controller = PIDController(16.3, kISub.get(), 1.1)
+        try {
+            var goodPoses = 0
+            while (true) {
+                val pose = awaitNewPose() ?: break
+                val error = pose.pose.translation.x - setpoint
+                errorPub.set(error)
+                if (error.absoluteValue < 0.05) {
+                    goodPoses++
+                } else {
+                    goodPoses = 0
+                }
+                if (goodPoses > 20) {
+                    break
+                }
+                val gain = controller.calculate(pose.pose.translation.x, setpoint)
+                robotContainer.drivetrain.driveDirection(-gain, 0.0, 0.0)
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
         }
     }
 
     private suspend fun turnTo(rotation: Rotation2d) {
-        val controller = PIDController(kPSub.get(), kISub.get(), kDSub.get())
+        val controller = PIDController(11.1, 0.0, 0.4)
         try {
             var goodPoses = 0
             while (true) {

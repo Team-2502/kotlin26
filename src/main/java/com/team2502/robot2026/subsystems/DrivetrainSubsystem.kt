@@ -60,7 +60,8 @@ class DrivetrainSubsystem : CoroutineSubsystem {
 
     override fun stop() {
         state = "STOPPED"
-        drivetrainSubsystem.setControl(SwerveRequest.SwerveDriveBrake())
+        drivetrainSubsystem.setControl(SwerveRequest.Idle())
+        // drivetrainSubsystem.setControl(SwerveRequest.SwerveDriveBrake())
     }
 
     fun resetPose(pose: Pose2d) {
