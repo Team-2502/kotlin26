@@ -46,6 +46,9 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     private val yawkPSub = autonNT.getDoubleTopic("yawkP").getEntry(0.0)
     private val yawkISub = autonNT.getDoubleTopic("yawkI").getEntry(0.0)
     private val yawkDSub = autonNT.getDoubleTopic("yawkD").getEntry(0.0)
+    private val ctkPSub = autonNT.getDoubleTopic("ctkP").getEntry(0.0)
+    private val ctkISub = autonNT.getDoubleTopic("ctkI").getEntry(0.0)
+    private val ctkDSub = autonNT.getDoubleTopic("ctkD").getEntry(0.0)
     private val errorPub = autonNT.getDoubleTopic("error").publish()
 
 
@@ -60,15 +63,18 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         yawkPSub.setDefault(0.0)
         yawkISub.setDefault(0.0)
         yawkDSub.setDefault(0.0)
+        ctkPSub.setDefault(0.0)
+        ctkISub.setDefault(0.0)
+        ctkDSub.setDefault(0.0)
 
         errorPub.setDefault(0.0)
 
         Path.setDefaultGlobalConstraints(
             DefaultGlobalConstraints(
-                4.0,  // maxVelocityMetersPerSec
-                3.0,  // maxAccelerationMetersPerSec2
-                360.0,  // maxVelocityDegPerSec
-                720.0,  // maxAccelerationDegPerSec2
+                4.5,  // maxVelocityMetersPerSec
+                7.0,  // maxAccelerationMetersPerSec2
+                720.0,  // maxVelocityDegPerSec
+                1500.0,  // maxAccelerationDegPerSec2
                 0.05,  // endTranslationToleranceMeters
                 2.0,  // endRotationToleranceDeg
                 0.3 // intermediateHandoffRadiusMeters
@@ -151,25 +157,24 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
                         { Localization.getCurrentPose()?.pose },
                         { Localization.getCurrentPose()?.state?.Speeds },
                         robotContainer.drivetrain::driveRobotRelative,
-                        PIDController(translationkPSub.get(), translationkISub.get(), translationkDSub.get()),
-                        PIDController(yawkPSub.get(), yawkISub.get(), yawkDSub.get()),
-                        PIDController(0.0, 0.0, 0.0),
+                        PIDController(BLINE_TRANSLATION_KP, BLINE_TRANSLATION_KI, BLINE_TRANSLATION_KD),
+                        PIDController(BLINE_ROTATION_KP, BLINE_ROTATION_KI, BLINE_ROTATION_KD),
+                        PIDController(ctkPSub.get(), ctkISub.get(), ctkDSub.get()),
                     ).withTRatioBasedTranslationHandoffs(true)
 
                     driveTo(
                         Pose2d(
-                            Translation2d(14.0, 2.0),
-                            Rotation2d(0.0)
+                            Translation2d(14.0, 2.5),
+                            Rotation2d.fromDegrees(0.0),
                         ), pathBuilder
                     )
-                    println("drove to first point")
                     driveTo(
                         Pose2d(
-                            Translation2d(11.0, 3.0),
-                            Rotation2d(180.0)
+                            Translation2d(10.0, 2.5),
+                            Rotation2d.fromDegrees(180.0)
                         ), pathBuilder
                     )
-                    println("drove to second point")
+                    delay(100.milliseconds)
                 }
             }
         } finally {
@@ -215,14 +220,88 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
         val elements = mutableListOf<Path.PathElement>()
 
+        elements.add(Path.Waypoint(start.translation, start.rotation))
         for (i in 1 until points.lastIndex) {
-            // TODO: add rotation
+            elements.add(Path.RotationTarget(points[i].second, 0.50))
             elements.add(Path.TranslationTarget(points[i].first, Optional.of(0.10)))
         }
-        val (translation, rotation) = points.last()
-        elements.add(Path.Waypoint(translation, rotation))
+        elements.add(Path.Waypoint(goal.translation, goal.rotation))
 
-        followPath(builder.build(Path(elements)))
+        val constraints = createVelocityConstraints(points)
+        val path = Path(elements, constraints)
+
+        followPath(builder.build(path))
+    }
+
+    private fun createVelocityConstraints(
+        points: List<Pair<Translation2d, Rotation2d>>
+    ): Path.PathConstraints {
+        val maxSpeed = 4.5
+        val acceleration = 9.0
+
+        // null means no local constraint (use global default).
+        // Index 0 is the starting position and stays null.
+        val speeds = MutableList<Double?>(points.size) { null }
+
+        for (i in 1 until points.lastIndex) {
+            val previous = points[i - 1].first
+            val current = points[i].first
+            val next = points[i + 1].first
+
+            val incoming = current.minus(previous)
+            val outgoing = next.minus(current)
+
+            if (incoming.norm < 1e-6 || outgoing.norm < 1e-6)
+                continue
+
+            val angle = kotlin.math.abs(
+                incoming.angle.minus(outgoing.angle).degrees
+            )
+
+            val cornerSpeed = when {
+                angle >= 90.0 -> 1.0
+                angle >= 45.0 -> 1.8
+                angle >= 25.0 -> 2.5
+                else -> maxSpeed
+            }
+
+            if (cornerSpeed >= maxSpeed) continue
+
+            val brakingDistance =
+                (maxSpeed * maxSpeed - cornerSpeed * cornerSpeed) /
+                        (2.0 * acceleration)
+
+            var distance = 0.0
+            var index = i
+
+            // Slow approaching targets, but never constrain
+            // the starting waypoint (index 0).
+            while (index >= 1 && distance < brakingDistance) {
+                speeds[index] = minOf(
+                    speeds[index] ?: maxSpeed,
+                    cornerSpeed
+                )
+
+                distance += points[index - 1].first.getDistance(
+                    points[index].first
+                )
+                index--
+            }
+        }
+
+        // Only emit constraints for waypoints that need slowing.
+        // Ordinal 0 is deliberately excluded.
+        val ranges = (1 until points.size).mapNotNull { index ->
+            speeds[index]?.let { speed ->
+                Path.RangedConstraint(speed, index, index)
+            }
+        }
+
+        return Path.PathConstraints().apply {
+            if (ranges.isNotEmpty()) {
+                setMaxVelocityMetersPerSec(*ranges.toTypedArray())
+            }
+        }
     }
 
     private suspend fun shootAtHub(alliance: DriverStation.Alliance) {
