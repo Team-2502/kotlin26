@@ -173,8 +173,6 @@ enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
                 }
             }
 
-            println("queue: $queue")
-
             while (queue.isNotEmpty()) {
                 val current = queue.poll() ?: run {
                     println("[NODE WARNING]: findPath: Queue empty on start")
