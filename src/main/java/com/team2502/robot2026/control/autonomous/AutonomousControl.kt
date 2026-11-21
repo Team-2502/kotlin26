@@ -9,8 +9,14 @@ import com.team2502.robot2026.Constants.Auto.BLINE_ROTATION_KP
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KD
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KI
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KP
+import com.team2502.robot2026.Constants.Field.BLUE_HUB_X_METERS
+import com.team2502.robot2026.Constants.Field.HALF_FIELD_WIDTH_METERS
+import com.team2502.robot2026.Constants.Field.RED_HUB_X_METERS
 import com.team2502.robot2026.control.common.FieldTarget
+import com.team2502.robot2026.control.common.Zone
 import com.team2502.robot2026.control.common.calculateShot
+import com.team2502.robot2026.control.teleop.ShooterControl
+import com.team2502.robot2026.control.teleop.ShooterControl.TargetingMode
 import com.team2502.robot2026.subsystems.RobotContainer
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.geometry.Pose2d
@@ -23,21 +29,23 @@ import frc.robot.lib.BLine.Path
 import frc.robot.lib.BLine.Path.DefaultGlobalConstraints
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class AutonomousControl(private val robotContainer: RobotContainer) {
-//    val pathBuilder = FollowPath.Builder(
-//        robotContainer.drivetrain.subsystem,
-//        { Localization.getCurrentPose()?.pose },
-//        { Localization.getCurrentPose()?.state?.Speeds },
-//        robotContainer.drivetrain::driveRobotRelative,
-//        PIDController(BLINE_TRANSLATION_KP, BLINE_TRANSLATION_KI, BLINE_TRANSLATION_KD),
-//        PIDController(BLINE_ROTATION_KP, BLINE_ROTATION_KI, BLINE_ROTATION_KD),
-//        PIDController(0.0, 0.0, 0.0),
-//    ).withTRatioBasedTranslationHandoffs(true)
+    val pathBuilder = FollowPath.Builder(
+        robotContainer.drivetrain.subsystem,
+        { Localization.getCurrentPose()?.pose },
+        { Localization.getCurrentPose()?.state?.Speeds },
+        robotContainer.drivetrain::driveRobotRelative,
+        PIDController(BLINE_TRANSLATION_KP, BLINE_TRANSLATION_KI, BLINE_TRANSLATION_KD),
+        PIDController(BLINE_ROTATION_KP, BLINE_ROTATION_KI, BLINE_ROTATION_KD),
+        PIDController(0.0, 0.0, 0.0),
+    ).withTRatioBasedTranslationHandoffs(true)
 
     private val autonNT = NetworkTableInstance.getDefault().getTable("PID")
     private val translationkPSub = autonNT.getDoubleTopic("translationkP").getEntry(0.0)
@@ -144,43 +152,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     }
 
     suspend fun run() {
-        val alliance = DriverStation.getAlliance().getOrNull()
-        if (alliance == null) {
-            System.err.println("ERROR: Not on any alliance!")
-            return
-        }
-        try {
-            coroutineScope {
-                while (true) {
-                    val pathBuilder = FollowPath.Builder(
-                        robotContainer.drivetrain.subsystem,
-                        { Localization.getCurrentPose()?.pose },
-                        { Localization.getCurrentPose()?.state?.Speeds },
-                        robotContainer.drivetrain::driveRobotRelative,
-                        PIDController(BLINE_TRANSLATION_KP, BLINE_TRANSLATION_KI, BLINE_TRANSLATION_KD),
-                        PIDController(BLINE_ROTATION_KP, BLINE_ROTATION_KI, BLINE_ROTATION_KD),
-                        PIDController(ctkPSub.get(), ctkISub.get(), ctkDSub.get()),
-                    ).withTRatioBasedTranslationHandoffs(true)
 
-                    driveTo(
-                        Pose2d(
-                            Translation2d(14.0, 2.5),
-                            Rotation2d.fromDegrees(0.0),
-                        ), pathBuilder
-                    )
-                    driveTo(
-                        Pose2d(
-                            Translation2d(10.0, 2.5),
-                            Rotation2d.fromDegrees(180.0)
-                        ), pathBuilder
-                    )
-                    delay(100.milliseconds)
-                }
-            }
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-        }
     }
 
     private suspend fun followPath(cmd: FollowPath) {
@@ -304,20 +276,88 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
     }
 
-    private suspend fun shootAtHub(alliance: DriverStation.Alliance) {
+    private suspend fun shoot() {
         try {
             while (true) {
                 val pose = awaitNewPose() ?: return
 
-                val target = when (alliance) {
-                    DriverStation.Alliance.Blue -> FieldTarget.BLUE_HUB
-                    DriverStation.Alliance.Red -> FieldTarget.RED_HUB
+                val target = updateTarget(pose.pose)
+                if (target != null) {
+                    val currentFlywheelSpeed = robotContainer.shooter.flywheelSpeed()
+                    val shot = calculateShot(pose, currentFlywheelSpeed, target)
+                    robotContainer.shooter.aimAndShoot(shot)
+                    robotContainer.drivetrain.speedLimit = shot.speedLimit
+                } else {
+                    robotContainer.drivetrain.speedLimit = null
+                    robotContainer.shooter.stop()
                 }
-                val currentFlywheelSpeed = robotContainer.shooter.flywheelSpeed()
-                val shot = calculateShot(pose, currentFlywheelSpeed, target)
-                robotContainer.shooter.aimAndShoot(shot)
             }
         } finally {
+            robotContainer.shooter.stop()
+        }
+    }
+
+    private fun updateTarget(pose: Pose2d): FieldTarget? { //TODO: telemetry targeting
+        val alliance = DriverStation.getAlliance().getOrNull() ?: return null
+
+        val currentZone = if (pose.y < HALF_FIELD_WIDTH_METERS) {
+            when {
+                pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
+                pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
+                else -> Zone.RED_BOTTOM
+            }
+        } else {
+            when {
+                pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_TOP
+                pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_TOP
+                else -> Zone.RED_TOP
+            }
+        }
+
+        val target = if (alliance == DriverStation.Alliance.Blue) {
+            when (currentZone) {
+                Zone.BLUE_TOP -> FieldTarget.BLUE_HUB
+                Zone.BLUE_BOTTOM -> FieldTarget.BLUE_HUB
+                Zone.MIDDLE_TOP -> FieldTarget.BLUE_PASS_TOP
+                Zone.MIDDLE_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
+                Zone.RED_TOP -> FieldTarget.BLUE_PASS_TOP
+                Zone.RED_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
+            }
+        } else {
+            when (currentZone) {
+                Zone.BLUE_TOP -> FieldTarget.RED_PASS_TOP
+                Zone.BLUE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
+                Zone.MIDDLE_TOP -> FieldTarget.RED_PASS_TOP
+                Zone.MIDDLE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
+                Zone.RED_TOP -> FieldTarget.RED_HUB
+                Zone.RED_BOTTOM -> FieldTarget.RED_HUB
+            }
+        }
+        return target
+    }
+
+    suspend fun redTop() {
+        try {
+            coroutineScope {
+                launch {
+                    delay(5.seconds)
+                    shoot()
+                }
+                launch {
+                    while (true) {
+                        driveTo(
+                            Pose2d(
+                                Translation2d(14.697014, 6.575820),
+                                Rotation2d.fromDegrees(180.0),
+                            ), pathBuilder
+                        )
+                        delay(100.milliseconds)
+                    }
+                }
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
             robotContainer.shooter.stop()
         }
     }

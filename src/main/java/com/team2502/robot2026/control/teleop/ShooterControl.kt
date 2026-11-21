@@ -14,6 +14,7 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import javax.swing.plaf.TableHeaderUI
 import kotlin.jvm.optionals.getOrNull
 
 class ShooterControl(private val robotContainer: RobotContainer) {
@@ -128,6 +129,4 @@ class ShooterControl(private val robotContainer: RobotContainer) {
 	enum class TargetingMode {
 		AUTOMATIC, TELEMETRY, IDLE
 	}
-
-
 }
