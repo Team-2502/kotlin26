@@ -1,5 +1,6 @@
 package com.team2502.robot2026.control.teleop
 
+import com.team2502.robot2026.control.common.ShooterControl
 import com.team2502.robot2026.subsystems.RobotContainer
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch

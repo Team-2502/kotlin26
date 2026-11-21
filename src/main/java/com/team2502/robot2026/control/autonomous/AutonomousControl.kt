@@ -1,6 +1,5 @@
 package com.team2502.robot2026.control.autonomous
 
-import com.team2502.lib.CoroutineRobot.Companion.runCommand
 import com.team2502.lib.Localization
 import com.team2502.lib.Localization.awaitNewPose
 import com.team2502.robot2026.Constants.Auto.BLINE_ROTATION_KD
@@ -15,8 +14,6 @@ import com.team2502.robot2026.Constants.Field.RED_HUB_X_METERS
 import com.team2502.robot2026.control.common.FieldTarget
 import com.team2502.robot2026.control.common.Zone
 import com.team2502.robot2026.control.common.calculateShot
-import com.team2502.robot2026.control.teleop.ShooterControl
-import com.team2502.robot2026.control.teleop.ShooterControl.TargetingMode
 import com.team2502.robot2026.subsystems.RobotContainer
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.geometry.Pose2d
@@ -39,9 +36,12 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 enum class AutoList {
+    NONE,
     RED_TOP_CLOSE_SCORE,
+    RED_MIDDLE_CLOSE_SCORE,
     RED_BOTTOM_CLOSE_SCORE,
     BLUE_TOP_CLOSE_SCORE,
+    BLUE_MIDDLE_CLOSE_SCORE,
     BLUE_BOTTOM_CLOSE_SCORE,
 }
 
@@ -66,9 +66,12 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     // TODO: Overrides withPoseReset function to not reset on new path > implement
 
     init {
-        autoChooser.setDefaultOption("Red Top Close Score", AutoList.RED_TOP_CLOSE_SCORE)
+        autoChooser.setDefaultOption("No Auto", AutoList.NONE)
+        autoChooser.addOption("Red Top Close Score", AutoList.RED_TOP_CLOSE_SCORE)
+        autoChooser.addOption("Red Middle Close Score", AutoList.RED_MIDDLE_CLOSE_SCORE)
         autoChooser.addOption("Red Bottom Close Score", AutoList.RED_BOTTOM_CLOSE_SCORE)
-        autoChooser.setDefaultOption("Blue Top Close Score", AutoList.BLUE_TOP_CLOSE_SCORE)
+        autoChooser.addOption("Blue Top Close Score", AutoList.BLUE_TOP_CLOSE_SCORE)
+        autoChooser.addOption("Blue Middle Close Score", AutoList.BLUE_MIDDLE_CLOSE_SCORE)
         autoChooser.addOption("Blue Bottom Close Score", AutoList.BLUE_BOTTOM_CLOSE_SCORE)
         SmartDashboard.putData("Auto Chooser", autoChooser)
 
@@ -149,14 +152,23 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     suspend fun run() {
         val auto = autoChooser.selected
         try {
+            delay(10.milliseconds)
             coroutineScope {
                 when (auto) {
+                    AutoList.NONE -> {
+                        delay(10.milliseconds)
+                    }
+
                     AutoList.RED_TOP_CLOSE_SCORE -> redTopCloseScore()
+                    AutoList.RED_MIDDLE_CLOSE_SCORE -> redMiddleCloseScore()
                     AutoList.RED_BOTTOM_CLOSE_SCORE -> redBottomCloseScore()
                     AutoList.BLUE_TOP_CLOSE_SCORE -> blueTopCloseScore()
+                    AutoList.BLUE_MIDDLE_CLOSE_SCORE -> blueMiddleCloseScore()
                     AutoList.BLUE_BOTTOM_CLOSE_SCORE -> blueBottomCloseScore()
                 }
             }
+            delay(100.milliseconds)
+
         } finally {
             robotContainer.drivetrain.stop()
             robotContainer.intake.stop()
@@ -285,7 +297,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
     }
 
-    private suspend fun shoot() {
+    internal suspend fun shoot() {
         try {
             while (true) {
                 val pose = awaitNewPose() ?: return
@@ -349,9 +361,12 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         try {
             coroutineScope {
                 launch {
+                    delay(8.seconds)
+                    robotContainer.intake.intake()
+                }
+                launch {
                     delay(5.seconds)
-                    launch { robotContainer.intake.intake() }
-                    launch { shoot() }
+                    shoot()
                 }
                 launch {
                     while (true) {
@@ -371,13 +386,17 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
             robotContainer.shooter.stop()
         }
     }
+
     suspend fun redBottomCloseScore() {
         try {
             coroutineScope {
                 launch {
+                    delay(8.seconds)
+                    robotContainer.intake.intake()
+                }
+                launch {
                     delay(5.seconds)
-                    launch { robotContainer.intake.intake() }
-                    launch { shoot() }
+                    shoot()
                 }
                 launch {
                     while (true) {
@@ -397,13 +416,17 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
             robotContainer.shooter.stop()
         }
     }
+
     suspend fun blueBottomCloseScore() {
         try {
             coroutineScope {
                 launch {
+                    delay(8.seconds)
+                    robotContainer.intake.intake()
+                }
+                launch {
                     delay(5.seconds)
-                    launch { robotContainer.intake.intake() }
-                    launch { shoot() }
+                    shoot()
                 }
                 launch {
                     while (true) {
@@ -428,15 +451,78 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         try {
             coroutineScope {
                 launch {
+                    delay(8.seconds)
+                    robotContainer.intake.intake()
+                }
+                launch {
                     delay(5.seconds)
-                    launch { robotContainer.intake.intake() }
-                    launch { shoot() }
+                    shoot()
                 }
                 launch {
                     while (true) {
                         driveTo(
                             Pose2d(
                                 Translation2d(1.5, 7.35),
+                                Rotation2d.fromDegrees(0.0),
+                            ), pathBuilder
+                        )
+                        delay(100.milliseconds)
+                    }
+                }
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
+            robotContainer.shooter.stop()
+        }
+    }
+
+    suspend fun redMiddleCloseScore() {
+        try {
+            coroutineScope {
+                launch {
+                    delay(8.seconds)
+                    robotContainer.intake.intake()
+                }
+                launch {
+                    delay(5.seconds)
+                    shoot()
+                }
+                launch {
+                    while (true) {
+                        driveTo(
+                            Pose2d(
+                                Translation2d(14.0, 4.0),
+                                Rotation2d.fromDegrees(180.0),
+                            ), pathBuilder
+                        )
+                        delay(100.milliseconds)
+                    }
+                }
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
+            robotContainer.shooter.stop()
+        }
+    }
+
+    suspend fun blueMiddleCloseScore() {
+        try {
+            coroutineScope {
+                launch {
+                    delay(8.seconds)
+                    robotContainer.intake.intake()
+                }
+                launch {
+                    delay(5.seconds)
+                    shoot()
+                }
+                launch {
+                    while (true) {
+                        driveTo(
+                            Pose2d(
+                                Translation2d(2.4, 4.0),
                                 Rotation2d.fromDegrees(0.0),
                             ), pathBuilder
                         )

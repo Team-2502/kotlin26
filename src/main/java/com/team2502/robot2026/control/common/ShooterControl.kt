@@ -1,20 +1,14 @@
-package com.team2502.robot2026.control.teleop
+package com.team2502.robot2026.control.common
 
-import com.team2502.robot2026.Constants.Field.BLUE_HUB_X_METERS
-import com.team2502.robot2026.Constants.Field.HALF_FIELD_WIDTH_METERS
-import com.team2502.robot2026.Constants.Field.RED_HUB_X_METERS
-import com.team2502.lib.CoroutineRobot.Companion.awaitDriverStationData
-import com.team2502.lib.Localization.awaitNewPose
-import com.team2502.robot2026.control.common.FieldTarget
-import com.team2502.robot2026.control.common.Zone
-import com.team2502.robot2026.control.common.calculateShot
+import com.team2502.lib.CoroutineRobot
+import com.team2502.lib.Localization
+import com.team2502.robot2026.Constants
 import com.team2502.robot2026.subsystems.RobotContainer
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import javax.swing.plaf.TableHeaderUI
 import kotlin.jvm.optionals.getOrNull
 
 class ShooterControl(private val robotContainer: RobotContainer) {
@@ -26,16 +20,16 @@ class ShooterControl(private val robotContainer: RobotContainer) {
 	private val currentZonePub = targetingNT.getStringTopic("currentZonePub").publish()
 
 	suspend fun updateLoop() {
-		coroutineScope {
-			launch { updateOperatorLoop() }
-			launch { updateControlLoop() }
-		}
+        coroutineScope {
+            launch { updateOperatorLoop() }
+            launch { updateControlLoop() }
+        }
 	}
 
 	private suspend fun updateOperatorLoop() {
 		try {
 			while (true) {
-				awaitDriverStationData()
+                CoroutineRobot.awaitDriverStationData()
 
 				if (robotContainer.operatorJoystick.leftBaseBottomMiddle) {
 					mode = TargetingMode.IDLE
@@ -54,7 +48,7 @@ class ShooterControl(private val robotContainer: RobotContainer) {
 	private suspend fun updateControlLoop() {
 		try {
 			while (true) {
-				val pose = awaitNewPose()
+				val pose = Localization.awaitNewPose()
 				if (pose == null) {
 					robotContainer.drivetrain.speedLimit = null
 					robotContainer.shooter.stop()
@@ -87,16 +81,16 @@ class ShooterControl(private val robotContainer: RobotContainer) {
 			return null
 		}
 
-		val currentZone = if (pose.y < HALF_FIELD_WIDTH_METERS) {
+		val currentZone = if (pose.y < Constants.Field.HALF_FIELD_WIDTH_METERS) {
 			when {
-				pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
-				pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
+				pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
+				pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
 				else -> Zone.RED_BOTTOM
 			}
 		} else {
 			when {
-				pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_TOP
-				pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_TOP
+				pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_TOP
+				pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_TOP
 				else -> Zone.RED_TOP
 			}
 		}
