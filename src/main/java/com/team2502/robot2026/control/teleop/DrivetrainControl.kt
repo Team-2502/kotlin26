@@ -25,9 +25,9 @@ class DrivetrainControl(private val robotContainer: RobotContainer) {
 				}
 
 				val velX =
-					robotContainer.driverLeftJoystick.y * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND
+					robotContainer.driverLeftJoystick.y * Constants.Drivetrain.MAX_SPEED_METERS_PER_SECOND
 				val velY =
-					-robotContainer.driverLeftJoystick.x * Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND
+					-robotContainer.driverLeftJoystick.x * Constants.Drivetrain.MAX_SPEED_METERS_PER_SECOND
 				// NEEDS TO RENABLE TELEOP FOR ALLIANCE TO FLIP
 				robotContainer.drivetrain.driveDirection(velX, velY, rotationRate)
 			}

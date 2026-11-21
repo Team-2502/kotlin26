@@ -8,6 +8,9 @@ import com.team2502.robot2026.Constants.Auto.BLINE_ROTATION_KP
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KD
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KI
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KP
+import com.team2502.robot2026.Constants.Drivetrain.MAX_SPEED_METERS_PER_SECOND
+import com.team2502.robot2026.Constants.Field.HALF_FIELD_LENGTH_METERS
+import com.team2502.robot2026.Constants.Field.HALF_FIELD_WIDTH_METERS
 import com.team2502.robot2026.control.common.ShooterControl
 import com.team2502.robot2026.control.common.Zone
 import com.team2502.robot2026.control.common.awaitZone
@@ -28,6 +31,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.util.Optional
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
@@ -51,42 +55,18 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
 
     private val autoStrategies = listOf(
         BackUpAutoStrategy("THIS ONE"),
-//        MowingAutoStrategy(
-//            "Red Top Close Score", Pose2d(
-//                Translation2d(15.0, 7.35),
-//                Rotation2d.fromDegrees(180.0),
-//            )
-//        ),
-//        MowingAutoStrategy(
-//            "Red Middle Close Score", Pose2d(
-//                Translation2d(14.0, 4.0),
-//                Rotation2d.fromDegrees(180.0),
-//            )
-//        ),
-//        MowingAutoStrategy(
-//            "Red Bottom Close Score", Pose2d(
-//                Translation2d(15.0, 0.7),
-//                Rotation2d.fromDegrees(180.0),
-//            )
-//        ),
-//        MowingAutoStrategy(
-//            "Blue Left Close Score", Pose2d(
-//                Translation2d(1.5, 7.35),
-//                Rotation2d.fromDegrees(0.0),
-//            )
-//        ),
-//        MowingAutoStrategy(
-//            "Blue Middle Close Score", Pose2d(
-//                Translation2d(2.4, 4.0),
-//                Rotation2d.fromDegrees(0.0),
-//            )
-//        ),
-//        MowingAutoStrategy(
-//            "Blue Right Close Score", Pose2d(
-//                Translation2d(1.5, 0.7),
-//                Rotation2d.fromDegrees(0.0),
-//            )
-//        ),
+        MowingAutoStrategy(
+            "Red Top Sweep Middle Return", Pose2d(
+                Translation2d(8.679983, 7.038161),
+                Rotation2d.fromDegrees(-90.0),
+            ), Pose2d(
+                Translation2d(14.0, 7.325687),
+                Rotation2d.fromDegrees(180.0),
+            ), Pose2d(
+                Translation2d(15.8, 7.325687),
+                Rotation2d.fromDegrees(180.0),
+            )
+        ),
     )
 
 //// Builder options persist. Clear this before building any later path command.
@@ -102,7 +82,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
 
         Path.setDefaultGlobalConstraints(
             DefaultGlobalConstraints(
-                4.5,  // maxVelocityMetersPerSec
+                MAX_SPEED_METERS_PER_SECOND,  // maxVelocityMetersPerSec
                 7.0,  // maxAccelerationMetersPerSec2
                 720.0,  // maxVelocityDegPerSec
                 1500.0,  // maxAccelerationDegPerSec2
@@ -175,13 +155,19 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     }
 
     suspend fun run() {
-        try {
-            autoChooser.selected.execute()
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
+        coroutineScope {
+            launch { autonShooterControl.updateLoop() }
+            launch {
+                try {
+                    autoChooser.selected.execute()
+                } finally {
+                    robotContainer.drivetrain.stop()
+                    robotContainer.intake.stop()
+                    robotContainer.shooter.stop()
+                }
+            }
         }
+
     }
 
     private suspend fun followPath(cmd: FollowPath) {
@@ -204,8 +190,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
     }
 
-    private suspend fun driveTo(goal: Pose2d, builder: FollowPath.Builder) {
-        println("drive to $goal")
+    private suspend fun driveTo(goal: Pose2d, builder: FollowPath.Builder, maxSpeed: Double = MAX_SPEED_METERS_PER_SECOND) {
         // Calculate the route when the command starts,
         // not when RobotContainer is initialized.
         val start = Localization.getCurrentPose()?.pose
@@ -228,16 +213,15 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
         elements.add(Path.Waypoint(goal.translation, goal.rotation))
 
-        val constraints = createVelocityConstraints(points)
+        val constraints = createVelocityConstraints(points, maxSpeed)
         val path = Path(elements, constraints)
 
         followPath(builder.build(path))
     }
 
     private fun createVelocityConstraints(
-        points: List<Pair<Translation2d, Rotation2d>>
+        points: List<Pair<Translation2d, Rotation2d>>, maxSpeed: Double
     ): Path.PathConstraints {
-        val maxSpeed = 4.5
         val acceleration = 9.0
 
         // null means no local constraint (use global default).
@@ -319,14 +303,14 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         override suspend fun execute() {
             try {
                 val pose = awaitNewPose() ?: return
-                val alliance = DriverStation.getAlliance() ?: DriverStation.Alliance.Blue
+                val alliance = DriverStation.getAlliance().getOrNull() ?: DriverStation.Alliance.Blue
                 val target: Pose2d
                 if (alliance == DriverStation.Alliance.Blue) {
                     target = Pose2d(Translation2d(pose.pose.x - distance, pose.pose.y), Rotation2d(0.0))
                 } else {
                     target = Pose2d(Translation2d(pose.pose.x + distance, pose.pose.y), Rotation2d(PI))
                 }
-                withTimeout(5.seconds) {driveTo(target, pathBuilder)}
+                withTimeout(5.seconds) { driveTo(target, pathBuilder) }
                 robotContainer.drivetrain.stop()
                 autonShooterControl.mode = ShooterControl.TargetingMode.AUTOMATIC
                 robotContainer.shooter.waitForShooterSpeed()
@@ -340,8 +324,18 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
     }
 
-    private inner class MowingAutoStrategy(override val name: String, val target: Pose2d) : AutoStrategy {
+    private inner class MowingAutoStrategy(
+        override val name: String,
+        val firstTarget: Pose2d,
+        val secondTarget: Pose2d,
+        val thirdTarget: Pose2d,
+    ) : AutoStrategy {
         override suspend fun execute() {
+            val middleTarget =
+                Pose2d(
+                    Translation2d(firstTarget.x, HALF_FIELD_WIDTH_METERS),
+                    firstTarget.rotation
+                )
             try {
                 coroutineScope {
                     launch {
@@ -352,8 +346,12 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
                         autonShooterControl.mode = ShooterControl.TargetingMode.AUTOMATIC
                     }
                     launch {
-                        driveTo(target, pathBuilder)
+                        driveTo(firstTarget, pathBuilder)
+                        driveTo(middleTarget, pathBuilder, 1.5)
+                        driveTo(secondTarget, pathBuilder)
+                        driveTo(thirdTarget, pathBuilder, 1.5)
                     }
+                    delay(5.seconds)
                 }
             } finally {
                 autonShooterControl.mode = ShooterControl.TargetingMode.IDLE

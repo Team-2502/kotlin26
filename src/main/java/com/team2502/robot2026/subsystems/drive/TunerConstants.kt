@@ -88,7 +88,7 @@ object TunerConstants {
     // This is NOT the desired max robot speed - see MaxSpeed in RobotContainer instead;
     // This needs to be tuned to your individual robot
     val kSpeedAt12Volts: LinearVelocity =
-        Units.MetersPerSecond.of(Constants.Drivetrain.MEASURED_MAX_SPEED_METERS_PER_SECOND)
+        Units.MetersPerSecond.of(Constants.Drivetrain.MAX_SPEED_METERS_PER_SECOND)
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot

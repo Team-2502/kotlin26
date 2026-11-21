@@ -11,7 +11,7 @@ class Constants {
     }
 
     object Drivetrain {
-        const val MEASURED_MAX_SPEED_METERS_PER_SECOND: Double = 4.58
+        const val MAX_SPEED_METERS_PER_SECOND: Double = 4.58
         const val MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND: Double = 2 * 3.1415
     }
 
