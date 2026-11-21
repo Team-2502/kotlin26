@@ -12,6 +12,7 @@ import com.team2502.robot2026.Constants.Field.BLUE_HUB_X_METERS
 import com.team2502.robot2026.Constants.Field.HALF_FIELD_WIDTH_METERS
 import com.team2502.robot2026.Constants.Field.RED_HUB_X_METERS
 import com.team2502.robot2026.control.common.FieldTarget
+import com.team2502.robot2026.control.common.ShooterControl
 import com.team2502.robot2026.control.common.Zone
 import com.team2502.robot2026.control.common.calculateShot
 import com.team2502.robot2026.subsystems.RobotContainer
@@ -59,7 +60,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     private val autonNT = NetworkTableInstance.getDefault().getTable("PID")
     private val autoChooser = SendableChooser<AutoList>()
     private val errorPub = autonNT.getDoubleTopic("error").publish()
-
+    private val autonShooterControl = ShooterControl(robotContainer)
 
 //// Builder options persist. Clear this before building any later path command.
 //		robotContainer.drivetrain.pathBuilder.withPoseReset({ ignored -> })
@@ -155,10 +156,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
             delay(10.milliseconds)
             coroutineScope {
                 when (auto) {
-                    AutoList.NONE -> {
-                        delay(10.milliseconds)
-                    }
-
+                    AutoList.NONE -> {}
                     AutoList.RED_TOP_CLOSE_SCORE -> redTopCloseScore()
                     AutoList.RED_MIDDLE_CLOSE_SCORE -> redMiddleCloseScore()
                     AutoList.RED_BOTTOM_CLOSE_SCORE -> redBottomCloseScore()
@@ -297,243 +295,85 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
     }
 
-    internal suspend fun shoot() {
+    suspend fun driveShoot(
+        targetPoint: Pose2d,
+        intakeDelaySeconds: Double = 8.0,
+        shooterDelaySeconds: Double = 5.0
+    ) {
         try {
-            while (true) {
-                val pose = awaitNewPose() ?: return
-
-                val target = updateTarget(pose.pose)
-                if (target != null) {
-                    val currentFlywheelSpeed = robotContainer.shooter.flywheelSpeed()
-                    val shot = calculateShot(pose, currentFlywheelSpeed, target)
-                    robotContainer.shooter.aimAndShoot(shot)
-                    robotContainer.drivetrain.speedLimit = shot.speedLimit
-                } else {
-                    robotContainer.drivetrain.speedLimit = null
-                    robotContainer.shooter.stop()
+            coroutineScope {
+                launch {
+                    delay(intakeDelaySeconds.seconds)
+                    robotContainer.intake.intake()
+                }
+                launch {
+                    delay(shooterDelaySeconds.seconds)
+                    autonShooterControl.mode = ShooterControl.TargetingMode.AUTOMATIC
+                }
+                launch {
+                    driveTo(targetPoint, pathBuilder)
+                    delay(100.milliseconds)
                 }
             }
         } finally {
+            autonShooterControl.mode = ShooterControl.TargetingMode.IDLE
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
             robotContainer.shooter.stop()
         }
-    }
-
-    private fun updateTarget(pose: Pose2d): FieldTarget? { //TODO: telemetry targeting
-        val alliance = DriverStation.getAlliance().getOrNull() ?: return null
-
-        val currentZone = if (pose.y < HALF_FIELD_WIDTH_METERS) {
-            when {
-                pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
-                pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
-                else -> Zone.RED_BOTTOM
-            }
-        } else {
-            when {
-                pose.x < BLUE_HUB_X_METERS -> Zone.BLUE_TOP
-                pose.x < RED_HUB_X_METERS -> Zone.MIDDLE_TOP
-                else -> Zone.RED_TOP
-            }
-        }
-
-        val target = if (alliance == DriverStation.Alliance.Blue) {
-            when (currentZone) {
-                Zone.BLUE_TOP -> FieldTarget.BLUE_HUB
-                Zone.BLUE_BOTTOM -> FieldTarget.BLUE_HUB
-                Zone.MIDDLE_TOP -> FieldTarget.BLUE_PASS_TOP
-                Zone.MIDDLE_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
-                Zone.RED_TOP -> FieldTarget.BLUE_PASS_TOP
-                Zone.RED_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
-            }
-        } else {
-            when (currentZone) {
-                Zone.BLUE_TOP -> FieldTarget.RED_PASS_TOP
-                Zone.BLUE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
-                Zone.MIDDLE_TOP -> FieldTarget.RED_PASS_TOP
-                Zone.MIDDLE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
-                Zone.RED_TOP -> FieldTarget.RED_HUB
-                Zone.RED_BOTTOM -> FieldTarget.RED_HUB
-            }
-        }
-        return target
     }
 
     suspend fun redTopCloseScore() {
-        try {
-            coroutineScope {
-                launch {
-                    delay(8.seconds)
-                    robotContainer.intake.intake()
-                }
-                launch {
-                    delay(5.seconds)
-                    shoot()
-                }
-                launch {
-                    while (true) {
-                        driveTo(
-                            Pose2d(
-                                Translation2d(15.0, 7.35),
-                                Rotation2d.fromDegrees(180.0),
-                            ), pathBuilder
-                        )
-                        delay(100.milliseconds)
-                    }
-                }
-            }
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
-        }
+        driveShoot(
+            Pose2d(
+                Translation2d(15.0, 7.35),
+                Rotation2d.fromDegrees(180.0),
+            )
+        )
     }
 
     suspend fun redBottomCloseScore() {
-        try {
-            coroutineScope {
-                launch {
-                    delay(8.seconds)
-                    robotContainer.intake.intake()
-                }
-                launch {
-                    delay(5.seconds)
-                    shoot()
-                }
-                launch {
-                    while (true) {
-                        driveTo(
-                            Pose2d(
-                                Translation2d(15.0, 0.7),
-                                Rotation2d.fromDegrees(180.0),
-                            ), pathBuilder
-                        )
-                        delay(100.milliseconds)
-                    }
-                }
-            }
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
-        }
+        driveShoot(
+            Pose2d(
+                Translation2d(15.0, 0.7),
+                Rotation2d.fromDegrees(180.0),
+            )
+        )
     }
 
     suspend fun blueBottomCloseScore() {
-        try {
-            coroutineScope {
-                launch {
-                    delay(8.seconds)
-                    robotContainer.intake.intake()
-                }
-                launch {
-                    delay(5.seconds)
-                    shoot()
-                }
-                launch {
-                    while (true) {
-                        driveTo(
-                            Pose2d(
-                                Translation2d(1.5, 0.7),
-                                Rotation2d.fromDegrees(0.0),
-                            ), pathBuilder
-                        )
-                        delay(100.milliseconds)
-                    }
-                }
-            }
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
-        }
+        driveShoot(
+            Pose2d(
+                Translation2d(1.5, 0.7),
+                Rotation2d.fromDegrees(0.0),
+            )
+        )
     }
 
     suspend fun blueTopCloseScore() {
-        try {
-            coroutineScope {
-                launch {
-                    delay(8.seconds)
-                    robotContainer.intake.intake()
-                }
-                launch {
-                    delay(5.seconds)
-                    shoot()
-                }
-                launch {
-                    while (true) {
-                        driveTo(
-                            Pose2d(
-                                Translation2d(1.5, 7.35),
-                                Rotation2d.fromDegrees(0.0),
-                            ), pathBuilder
-                        )
-                        delay(100.milliseconds)
-                    }
-                }
-            }
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
-        }
+        driveShoot(
+            Pose2d(
+                Translation2d(1.5, 7.35),
+                Rotation2d.fromDegrees(0.0),
+            )
+        )
     }
 
     suspend fun redMiddleCloseScore() {
-        try {
-            coroutineScope {
-                launch {
-                    delay(8.seconds)
-                    robotContainer.intake.intake()
-                }
-                launch {
-                    delay(5.seconds)
-                    shoot()
-                }
-                launch {
-                    while (true) {
-                        driveTo(
-                            Pose2d(
-                                Translation2d(14.0, 4.0),
-                                Rotation2d.fromDegrees(180.0),
-                            ), pathBuilder
-                        )
-                        delay(100.milliseconds)
-                    }
-                }
-            }
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
-        }
+        driveShoot(
+            Pose2d(
+                Translation2d(14.0, 4.0),
+                Rotation2d.fromDegrees(180.0),
+            )
+        )
     }
 
     suspend fun blueMiddleCloseScore() {
-        try {
-            coroutineScope {
-                launch {
-                    delay(8.seconds)
-                    robotContainer.intake.intake()
-                }
-                launch {
-                    delay(5.seconds)
-                    shoot()
-                }
-                launch {
-                    while (true) {
-                        driveTo(
-                            Pose2d(
-                                Translation2d(2.4, 4.0),
-                                Rotation2d.fromDegrees(0.0),
-                            ), pathBuilder
-                        )
-                        delay(100.milliseconds)
-                    }
-                }
-            }
-        } finally {
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
-        }
+        driveShoot(
+            Pose2d(
+                Translation2d(2.4, 4.0),
+                Rotation2d.fromDegrees(0.0),
+            )
+        )
     }
 }

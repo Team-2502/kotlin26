@@ -12,115 +12,99 @@ import kotlinx.coroutines.launch
 import kotlin.jvm.optionals.getOrNull
 
 class ShooterControl(private val robotContainer: RobotContainer) {
-	private var mode = TargetingMode.IDLE
-
-	private val targetingNT = NetworkTableInstance.getDefault().getTable("targetingTable")
-	private val modePub = targetingNT.getStringTopic("modePub").publish()
-	private val targetNamePub = targetingNT.getStringTopic("targetNamePub").publish()
-	private val currentZonePub = targetingNT.getStringTopic("currentZonePub").publish()
-
-	suspend fun updateLoop() {
-        coroutineScope {
-            launch { updateOperatorLoop() }
-            launch { updateControlLoop() }
+    var mode = TargetingMode.IDLE
+        set(value) {
+            field = value
+            modePub.set(value.name)
         }
-	}
 
-	private suspend fun updateOperatorLoop() {
-		try {
-			while (true) {
-                CoroutineRobot.awaitDriverStationData()
+    suspend fun updateLoop() {
+        updateControlLoop()
+    }
 
-				if (robotContainer.operatorJoystick.leftBaseBottomMiddle) {
-					mode = TargetingMode.IDLE
-					modePub.set("IDLE")
-				} else if (robotContainer.operatorJoystick.leftBaseBottomRight) {
-					mode = TargetingMode.AUTOMATIC
-					modePub.set("AUTOMATIC")
-				}
-			}
-		} finally {
-			mode = TargetingMode.IDLE
-			modePub.set("IDLE")
-		}
-	}
+    private suspend fun updateControlLoop() {
+        try {
+            while (true) {
+                val pose = Localization.awaitNewPose()
+                if (pose == null) {
+                    robotContainer.drivetrain.speedLimit = null
+                    robotContainer.shooter.stop()
+                    continue
+                }
 
-	private suspend fun updateControlLoop() {
-		try {
-			while (true) {
-				val pose = Localization.awaitNewPose()
-				if (pose == null) {
-					robotContainer.drivetrain.speedLimit = null
-					robotContainer.shooter.stop()
-					continue
-				}
+                val target = updateTarget(pose.pose)
+                if (mode == TargetingMode.AUTOMATIC && target != null) {
+                    val currentFlywheelSpeed = robotContainer.shooter.flywheelSpeed()
+                    val shot = calculateShot(pose, currentFlywheelSpeed, target)
+                    robotContainer.shooter.aimAndShoot(shot)
+                    robotContainer.drivetrain.speedLimit = shot.speedLimit
+                } else {
+                    robotContainer.drivetrain.speedLimit = null
+                    robotContainer.shooter.stop()
+                }
+            }
+        } finally {
+            mode = TargetingMode.IDLE
+            robotContainer.drivetrain.speedLimit = null
+            robotContainer.shooter.stop()
+        }
+    }
 
-				val target = updateTarget(pose.pose)
-				if (mode == TargetingMode.AUTOMATIC && target != null) {
-					val currentFlywheelSpeed = robotContainer.shooter.flywheelSpeed()
-					val shot = calculateShot(pose, currentFlywheelSpeed, target)
-					robotContainer.shooter.aimAndShoot(shot)
-					robotContainer.drivetrain.speedLimit = shot.speedLimit
-				} else {
-					robotContainer.drivetrain.speedLimit = null
-					robotContainer.shooter.stop()
-				}
-			}
-		} finally {
-			mode = TargetingMode.IDLE
-			robotContainer.drivetrain.speedLimit = null
-			robotContainer.shooter.stop()
-		}
-	}
+    private fun updateTarget(pose: Pose2d): FieldTarget? { //TODO: telemetry targeting
+        val alliance = DriverStation.getAlliance().getOrNull()
+        if (alliance == null) {
+            targetNamePub.set("No Alliance")
+            currentZonePub.set("No Alliance")
+            return null
+        }
 
-	private fun updateTarget(pose: Pose2d): FieldTarget? { //TODO: telemetry targeting
-		val alliance = DriverStation.getAlliance().getOrNull()
-		if (alliance == null) {
-			targetNamePub.set("No Alliance")
-			currentZonePub.set("No Alliance")
-			return null
-		}
+        val currentZone = if (pose.y < Constants.Field.HALF_FIELD_WIDTH_METERS) {
+            when {
+                pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
+                pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
+                else -> Zone.RED_BOTTOM
+            }
+        } else {
+            when {
+                pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_TOP
+                pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_TOP
+                else -> Zone.RED_TOP
+            }
+        }
 
-		val currentZone = if (pose.y < Constants.Field.HALF_FIELD_WIDTH_METERS) {
-			when {
-				pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
-				pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
-				else -> Zone.RED_BOTTOM
-			}
-		} else {
-			when {
-				pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_TOP
-				pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_TOP
-				else -> Zone.RED_TOP
-			}
-		}
+        val target = if (alliance == DriverStation.Alliance.Blue) {
+            when (currentZone) {
+                Zone.BLUE_TOP -> FieldTarget.BLUE_HUB
+                Zone.BLUE_BOTTOM -> FieldTarget.BLUE_HUB
+                Zone.MIDDLE_TOP -> FieldTarget.BLUE_PASS_TOP
+                Zone.MIDDLE_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
+                Zone.RED_TOP -> FieldTarget.BLUE_PASS_TOP
+                Zone.RED_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
+            }
+        } else {
+            when (currentZone) {
+                Zone.BLUE_TOP -> FieldTarget.RED_PASS_TOP
+                Zone.BLUE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
+                Zone.MIDDLE_TOP -> FieldTarget.RED_PASS_TOP
+                Zone.MIDDLE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
+                Zone.RED_TOP -> FieldTarget.RED_HUB
+                Zone.RED_BOTTOM -> FieldTarget.RED_HUB
+            }
+        }
 
-		val target = if (alliance == DriverStation.Alliance.Blue) {
-			when (currentZone) {
-				Zone.BLUE_TOP -> FieldTarget.BLUE_HUB
-				Zone.BLUE_BOTTOM -> FieldTarget.BLUE_HUB
-				Zone.MIDDLE_TOP -> FieldTarget.BLUE_PASS_TOP
-				Zone.MIDDLE_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
-				Zone.RED_TOP -> FieldTarget.BLUE_PASS_TOP
-				Zone.RED_BOTTOM -> FieldTarget.BLUE_PASS_BOTTOM
-			}
-		} else {
-			when (currentZone) {
-				Zone.BLUE_TOP -> FieldTarget.RED_PASS_TOP
-				Zone.BLUE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
-				Zone.MIDDLE_TOP -> FieldTarget.RED_PASS_TOP
-				Zone.MIDDLE_BOTTOM -> FieldTarget.RED_PASS_BOTTOM
-				Zone.RED_TOP -> FieldTarget.RED_HUB
-				Zone.RED_BOTTOM -> FieldTarget.RED_HUB
-			}
-		}
+        targetNamePub.set(target.name)
+        currentZonePub.set(currentZone.name)
+        return target
+    }
 
-		targetNamePub.set(target.name)
-		currentZonePub.set(currentZone.name)
-		return target
-	}
+    enum class TargetingMode {
+        AUTOMATIC, TELEMETRY, IDLE
+    }
 
-	enum class TargetingMode {
-		AUTOMATIC, TELEMETRY, IDLE
-	}
+    companion object {
+        private val targetingNT = NetworkTableInstance.getDefault().getTable("targetingTable")
+        private val modePub = targetingNT.getStringTopic("modePub").publish()
+        private val targetNamePub = targetingNT.getStringTopic("targetNamePub").publish()
+        private val currentZonePub = targetingNT.getStringTopic("currentZonePub").publish()
+    }
 }
