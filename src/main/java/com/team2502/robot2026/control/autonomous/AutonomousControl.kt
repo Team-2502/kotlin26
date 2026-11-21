@@ -226,7 +226,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
 
         // null means no local constraint (use global default).
         // Index 0 is the starting position and stays null.
-        val speeds = MutableList<Double?>(points.size) { null }
+        val speeds = MutableList<Double>(points.size) { maxSpeed }
 
         for (i in 1 until points.lastIndex) {
             val previous = points[i - 1].first
@@ -351,8 +351,8 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
                         driveTo(secondTarget, pathBuilder)
                         driveTo(thirdTarget, pathBuilder, 1.5)
                     }
-                    delay(5.seconds)
                 }
+                delay(5.seconds)
             } finally {
                 autonShooterControl.mode = ShooterControl.TargetingMode.IDLE
                 robotContainer.drivetrain.stop()
