@@ -95,7 +95,7 @@ class Constants {
     }
 
     object Auto {
-        const val PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS = 0.9144 / 2
+        const val PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS = 0.762 / 2.0
         const val BLINE_TRANSLATION_KP = 3.4
         const val BLINE_TRANSLATION_KI = 0.0
         const val BLINE_TRANSLATION_KD = 0.8

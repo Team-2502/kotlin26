@@ -8,13 +8,9 @@ import com.team2502.robot2026.Constants.Auto.BLINE_ROTATION_KP
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KD
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KI
 import com.team2502.robot2026.Constants.Auto.BLINE_TRANSLATION_KP
-import com.team2502.robot2026.Constants.Field.BLUE_HUB_X_METERS
-import com.team2502.robot2026.Constants.Field.HALF_FIELD_WIDTH_METERS
-import com.team2502.robot2026.Constants.Field.RED_HUB_X_METERS
-import com.team2502.robot2026.control.common.FieldTarget
 import com.team2502.robot2026.control.common.ShooterControl
 import com.team2502.robot2026.control.common.Zone
-import com.team2502.robot2026.control.common.calculateShot
+import com.team2502.robot2026.control.common.awaitZone
 import com.team2502.robot2026.subsystems.RobotContainer
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.geometry.Pose2d
@@ -30,21 +26,12 @@ import frc.robot.lib.BLine.Path.DefaultGlobalConstraints
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.Optional
-import kotlin.jvm.optionals.getOrNull
+import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-
-enum class AutoList {
-    NONE,
-    RED_TOP_CLOSE_SCORE,
-    RED_MIDDLE_CLOSE_SCORE,
-    RED_BOTTOM_CLOSE_SCORE,
-    BLUE_TOP_CLOSE_SCORE,
-    BLUE_MIDDLE_CLOSE_SCORE,
-    BLUE_BOTTOM_CLOSE_SCORE,
-}
 
 class AutonomousControl(private val robotContainer: RobotContainer) {
     val pathBuilder = FollowPath.Builder(
@@ -58,22 +45,59 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     ).withTRatioBasedTranslationHandoffs(true)
 
     private val autonNT = NetworkTableInstance.getDefault().getTable("PID")
-    private val autoChooser = SendableChooser<AutoList>()
+    private val autoChooser = SendableChooser<AutoStrategy>()
     private val errorPub = autonNT.getDoubleTopic("error").publish()
     private val autonShooterControl = ShooterControl(robotContainer)
+
+    private val autoStrategies = listOf(
+        BackUpAutoStrategy("THIS ONE"),
+//        MowingAutoStrategy(
+//            "Red Top Close Score", Pose2d(
+//                Translation2d(15.0, 7.35),
+//                Rotation2d.fromDegrees(180.0),
+//            )
+//        ),
+//        MowingAutoStrategy(
+//            "Red Middle Close Score", Pose2d(
+//                Translation2d(14.0, 4.0),
+//                Rotation2d.fromDegrees(180.0),
+//            )
+//        ),
+//        MowingAutoStrategy(
+//            "Red Bottom Close Score", Pose2d(
+//                Translation2d(15.0, 0.7),
+//                Rotation2d.fromDegrees(180.0),
+//            )
+//        ),
+//        MowingAutoStrategy(
+//            "Blue Left Close Score", Pose2d(
+//                Translation2d(1.5, 7.35),
+//                Rotation2d.fromDegrees(0.0),
+//            )
+//        ),
+//        MowingAutoStrategy(
+//            "Blue Middle Close Score", Pose2d(
+//                Translation2d(2.4, 4.0),
+//                Rotation2d.fromDegrees(0.0),
+//            )
+//        ),
+//        MowingAutoStrategy(
+//            "Blue Right Close Score", Pose2d(
+//                Translation2d(1.5, 0.7),
+//                Rotation2d.fromDegrees(0.0),
+//            )
+//        ),
+    )
 
 //// Builder options persist. Clear this before building any later path command.
 //		robotContainer.drivetrain.pathBuilder.withPoseReset({ ignored -> })
     // TODO: Overrides withPoseReset function to not reset on new path > implement
 
     init {
-        autoChooser.setDefaultOption("No Auto", AutoList.NONE)
-        autoChooser.addOption("Red Top Close Score", AutoList.RED_TOP_CLOSE_SCORE)
-        autoChooser.addOption("Red Middle Close Score", AutoList.RED_MIDDLE_CLOSE_SCORE)
-        autoChooser.addOption("Red Bottom Close Score", AutoList.RED_BOTTOM_CLOSE_SCORE)
-        autoChooser.addOption("Blue Top Close Score", AutoList.BLUE_TOP_CLOSE_SCORE)
-        autoChooser.addOption("Blue Middle Close Score", AutoList.BLUE_MIDDLE_CLOSE_SCORE)
-        autoChooser.addOption("Blue Bottom Close Score", AutoList.BLUE_BOTTOM_CLOSE_SCORE)
+        autoChooser.setDefaultOption("No Auto", NoOpAutoStrategy("No Auto"))
+        for (strategy in autoStrategies) {
+            autoChooser.addOption(strategy.name, strategy)
+        }
         SmartDashboard.putData("Auto Chooser", autoChooser)
 
         Path.setDefaultGlobalConstraints(
@@ -151,22 +175,8 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     }
 
     suspend fun run() {
-        val auto = autoChooser.selected
         try {
-            delay(10.milliseconds)
-            coroutineScope {
-                when (auto) {
-                    AutoList.NONE -> {}
-                    AutoList.RED_TOP_CLOSE_SCORE -> redTopCloseScore()
-                    AutoList.RED_MIDDLE_CLOSE_SCORE -> redMiddleCloseScore()
-                    AutoList.RED_BOTTOM_CLOSE_SCORE -> redBottomCloseScore()
-                    AutoList.BLUE_TOP_CLOSE_SCORE -> blueTopCloseScore()
-                    AutoList.BLUE_MIDDLE_CLOSE_SCORE -> blueMiddleCloseScore()
-                    AutoList.BLUE_BOTTOM_CLOSE_SCORE -> blueBottomCloseScore()
-                }
-            }
-            delay(100.milliseconds)
-
+            autoChooser.selected.execute()
         } finally {
             robotContainer.drivetrain.stop()
             robotContainer.intake.stop()
@@ -295,85 +305,62 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         }
     }
 
-    suspend fun driveShoot(
-        targetPoint: Pose2d,
-        intakeDelaySeconds: Double = 8.0,
-        shooterDelaySeconds: Double = 5.0
-    ) {
-        try {
-            coroutineScope {
-                launch {
-                    delay(intakeDelaySeconds.seconds)
-                    robotContainer.intake.intake()
+    private interface AutoStrategy {
+        val name: String
+        suspend fun execute()
+    }
+
+    private class NoOpAutoStrategy(override val name: String) : AutoStrategy {
+        override suspend fun execute() {}
+    }
+
+    private inner class BackUpAutoStrategy(override val name: String, private val distance: Double = 1.0) :
+        AutoStrategy {
+        override suspend fun execute() {
+            try {
+                val pose = awaitNewPose() ?: return
+                val alliance = DriverStation.getAlliance() ?: DriverStation.Alliance.Blue
+                val target: Pose2d
+                if (alliance == DriverStation.Alliance.Blue) {
+                    target = Pose2d(Translation2d(pose.pose.x - distance, pose.pose.y), Rotation2d(0.0))
+                } else {
+                    target = Pose2d(Translation2d(pose.pose.x + distance, pose.pose.y), Rotation2d(PI))
                 }
-                launch {
-                    delay(shooterDelaySeconds.seconds)
-                    autonShooterControl.mode = ShooterControl.TargetingMode.AUTOMATIC
-                }
-                launch {
-                    driveTo(targetPoint, pathBuilder)
-                    delay(100.milliseconds)
-                }
+                withTimeout(5.seconds) {driveTo(target, pathBuilder)}
+                robotContainer.drivetrain.stop()
+                autonShooterControl.mode = ShooterControl.TargetingMode.AUTOMATIC
+                robotContainer.shooter.waitForShooterSpeed()
+                robotContainer.intake.intake()
+                delay(5.seconds)
+            } finally {
+                robotContainer.drivetrain.stop()
+                robotContainer.intake.stop()
+                robotContainer.shooter.stop()
             }
-        } finally {
-            autonShooterControl.mode = ShooterControl.TargetingMode.IDLE
-            robotContainer.drivetrain.stop()
-            robotContainer.intake.stop()
-            robotContainer.shooter.stop()
         }
     }
 
-    suspend fun redTopCloseScore() {
-        driveShoot(
-            Pose2d(
-                Translation2d(15.0, 7.35),
-                Rotation2d.fromDegrees(180.0),
-            )
-        )
-    }
-
-    suspend fun redBottomCloseScore() {
-        driveShoot(
-            Pose2d(
-                Translation2d(15.0, 0.7),
-                Rotation2d.fromDegrees(180.0),
-            )
-        )
-    }
-
-    suspend fun blueBottomCloseScore() {
-        driveShoot(
-            Pose2d(
-                Translation2d(1.5, 0.7),
-                Rotation2d.fromDegrees(0.0),
-            )
-        )
-    }
-
-    suspend fun blueTopCloseScore() {
-        driveShoot(
-            Pose2d(
-                Translation2d(1.5, 7.35),
-                Rotation2d.fromDegrees(0.0),
-            )
-        )
-    }
-
-    suspend fun redMiddleCloseScore() {
-        driveShoot(
-            Pose2d(
-                Translation2d(14.0, 4.0),
-                Rotation2d.fromDegrees(180.0),
-            )
-        )
-    }
-
-    suspend fun blueMiddleCloseScore() {
-        driveShoot(
-            Pose2d(
-                Translation2d(2.4, 4.0),
-                Rotation2d.fromDegrees(0.0),
-            )
-        )
+    private inner class MowingAutoStrategy(override val name: String, val target: Pose2d) : AutoStrategy {
+        override suspend fun execute() {
+            try {
+                coroutineScope {
+                    launch {
+                        robotContainer.intake.stop()
+                        autonShooterControl.mode = ShooterControl.TargetingMode.IDLE
+                        awaitZone(Zone.MIDDLE_BOTTOM, Zone.MIDDLE_TOP)
+                        robotContainer.intake.intake()
+                        autonShooterControl.mode = ShooterControl.TargetingMode.AUTOMATIC
+                    }
+                    launch {
+                        driveTo(target, pathBuilder)
+                    }
+                }
+            } finally {
+                autonShooterControl.mode = ShooterControl.TargetingMode.IDLE
+                robotContainer.drivetrain.stop()
+                robotContainer.intake.stop()
+                robotContainer.shooter.stop()
+            }
+        }
     }
 }

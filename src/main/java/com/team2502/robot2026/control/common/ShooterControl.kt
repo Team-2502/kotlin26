@@ -2,11 +2,13 @@ package com.team2502.robot2026.control.common
 
 import com.team2502.lib.CoroutineRobot
 import com.team2502.lib.Localization
+import com.team2502.lib.Localization.awaitNewPose
 import com.team2502.robot2026.Constants
 import com.team2502.robot2026.subsystems.RobotContainer
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.jvm.optionals.getOrNull
@@ -58,19 +60,7 @@ class ShooterControl(private val robotContainer: RobotContainer) {
             return null
         }
 
-        val currentZone = if (pose.y < Constants.Field.HALF_FIELD_WIDTH_METERS) {
-            when {
-                pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
-                pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
-                else -> Zone.RED_BOTTOM
-            }
-        } else {
-            when {
-                pose.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_TOP
-                pose.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_TOP
-                else -> Zone.RED_TOP
-            }
-        }
+        val currentZone = pose.getZone()
 
         val target = if (alliance == DriverStation.Alliance.Blue) {
             when (currentZone) {
@@ -106,5 +96,33 @@ class ShooterControl(private val robotContainer: RobotContainer) {
         private val modePub = targetingNT.getStringTopic("modePub").publish()
         private val targetNamePub = targetingNT.getStringTopic("targetNamePub").publish()
         private val currentZonePub = targetingNT.getStringTopic("currentZonePub").publish()
+    }
+}
+
+fun Pose2d.getZone(): Zone {
+    return if (this.y < Constants.Field.HALF_FIELD_WIDTH_METERS) {
+        when {
+            this.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_BOTTOM
+            this.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_BOTTOM
+            else -> Zone.RED_BOTTOM
+        }
+    } else {
+        when {
+            this.x < Constants.Field.BLUE_HUB_X_METERS -> Zone.BLUE_TOP
+            this.x < Constants.Field.RED_HUB_X_METERS -> Zone.MIDDLE_TOP
+            else -> Zone.RED_TOP
+        }
+    }
+}
+
+suspend fun awaitZone(vararg zones: Zone) {
+    if (zones.isEmpty()) {
+        DriverStation.reportError("awaitZone: no zones passed in, stalling code", true)
+        awaitCancellation()
+    }
+    while (true) {
+        val pose = awaitNewPose() ?: continue
+        if (zones.contains(pose.pose.getZone()))
+            return
     }
 }
