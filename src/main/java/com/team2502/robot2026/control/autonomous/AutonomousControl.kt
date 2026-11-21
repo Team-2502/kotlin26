@@ -24,6 +24,8 @@ import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.robot.lib.BLine.FollowPath
 import frc.robot.lib.BLine.Path
 import frc.robot.lib.BLine.Path.DefaultGlobalConstraints
@@ -35,6 +37,13 @@ import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+enum class AutoList {
+    RED_TOP_CLOSE_SCORE,
+    RED_BOTTOM_CLOSE_SCORE,
+    BLUE_TOP_CLOSE_SCORE,
+    BLUE_BOTTOM_CLOSE_SCORE,
+}
 
 class AutonomousControl(private val robotContainer: RobotContainer) {
     val pathBuilder = FollowPath.Builder(
@@ -48,15 +57,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     ).withTRatioBasedTranslationHandoffs(true)
 
     private val autonNT = NetworkTableInstance.getDefault().getTable("PID")
-    private val translationkPSub = autonNT.getDoubleTopic("translationkP").getEntry(0.0)
-    private val translationkISub = autonNT.getDoubleTopic("translationkI").getEntry(0.0)
-    private val translationkDSub = autonNT.getDoubleTopic("translationkD").getEntry(0.0)
-    private val yawkPSub = autonNT.getDoubleTopic("yawkP").getEntry(0.0)
-    private val yawkISub = autonNT.getDoubleTopic("yawkI").getEntry(0.0)
-    private val yawkDSub = autonNT.getDoubleTopic("yawkD").getEntry(0.0)
-    private val ctkPSub = autonNT.getDoubleTopic("ctkP").getEntry(0.0)
-    private val ctkISub = autonNT.getDoubleTopic("ctkI").getEntry(0.0)
-    private val ctkDSub = autonNT.getDoubleTopic("ctkD").getEntry(0.0)
+    private val autoChooser = SendableChooser<AutoList>()
     private val errorPub = autonNT.getDoubleTopic("error").publish()
 
 
@@ -65,17 +66,11 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     // TODO: Overrides withPoseReset function to not reset on new path > implement
 
     init {
-        translationkPSub.setDefault(0.0)
-        translationkISub.setDefault(0.0)
-        translationkDSub.setDefault(0.0)
-        yawkPSub.setDefault(0.0)
-        yawkISub.setDefault(0.0)
-        yawkDSub.setDefault(0.0)
-        ctkPSub.setDefault(0.0)
-        ctkISub.setDefault(0.0)
-        ctkDSub.setDefault(0.0)
-
-        errorPub.setDefault(0.0)
+        autoChooser.setDefaultOption("Red Top Close Score", AutoList.RED_TOP_CLOSE_SCORE)
+        autoChooser.addOption("Red Bottom Close Score", AutoList.RED_BOTTOM_CLOSE_SCORE)
+        autoChooser.setDefaultOption("Blue Top Close Score", AutoList.BLUE_TOP_CLOSE_SCORE)
+        autoChooser.addOption("Blue Bottom Close Score", AutoList.BLUE_BOTTOM_CLOSE_SCORE)
+        SmartDashboard.putData("Auto Chooser", autoChooser)
 
         Path.setDefaultGlobalConstraints(
             DefaultGlobalConstraints(
@@ -152,7 +147,21 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
     }
 
     suspend fun run() {
-
+        val auto = autoChooser.selected
+        try {
+            coroutineScope {
+                when (auto) {
+                    AutoList.RED_TOP_CLOSE_SCORE -> redTopCloseScore()
+                    AutoList.RED_BOTTOM_CLOSE_SCORE -> redBottomCloseScore()
+                    AutoList.BLUE_TOP_CLOSE_SCORE -> blueTopCloseScore()
+                    AutoList.BLUE_BOTTOM_CLOSE_SCORE -> blueBottomCloseScore()
+                }
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
+            robotContainer.shooter.stop()
+        }
     }
 
     private suspend fun followPath(cmd: FollowPath) {
@@ -336,19 +345,99 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         return target
     }
 
-    suspend fun redTop() {
+    suspend fun redTopCloseScore() {
         try {
             coroutineScope {
                 launch {
                     delay(5.seconds)
-                    shoot()
+                    launch { robotContainer.intake.intake() }
+                    launch { shoot() }
                 }
                 launch {
                     while (true) {
                         driveTo(
                             Pose2d(
-                                Translation2d(14.697014, 6.575820),
+                                Translation2d(15.0, 7.35),
                                 Rotation2d.fromDegrees(180.0),
+                            ), pathBuilder
+                        )
+                        delay(100.milliseconds)
+                    }
+                }
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
+            robotContainer.shooter.stop()
+        }
+    }
+    suspend fun redBottomCloseScore() {
+        try {
+            coroutineScope {
+                launch {
+                    delay(5.seconds)
+                    launch { robotContainer.intake.intake() }
+                    launch { shoot() }
+                }
+                launch {
+                    while (true) {
+                        driveTo(
+                            Pose2d(
+                                Translation2d(15.0, 0.7),
+                                Rotation2d.fromDegrees(180.0),
+                            ), pathBuilder
+                        )
+                        delay(100.milliseconds)
+                    }
+                }
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
+            robotContainer.shooter.stop()
+        }
+    }
+    suspend fun blueBottomCloseScore() {
+        try {
+            coroutineScope {
+                launch {
+                    delay(5.seconds)
+                    launch { robotContainer.intake.intake() }
+                    launch { shoot() }
+                }
+                launch {
+                    while (true) {
+                        driveTo(
+                            Pose2d(
+                                Translation2d(1.5, 0.7),
+                                Rotation2d.fromDegrees(0.0),
+                            ), pathBuilder
+                        )
+                        delay(100.milliseconds)
+                    }
+                }
+            }
+        } finally {
+            robotContainer.drivetrain.stop()
+            robotContainer.intake.stop()
+            robotContainer.shooter.stop()
+        }
+    }
+
+    suspend fun blueTopCloseScore() {
+        try {
+            coroutineScope {
+                launch {
+                    delay(5.seconds)
+                    launch { robotContainer.intake.intake() }
+                    launch { shoot() }
+                }
+                launch {
+                    while (true) {
+                        driveTo(
+                            Pose2d(
+                                Translation2d(1.5, 7.35),
+                                Rotation2d.fromDegrees(0.0),
                             ), pathBuilder
                         )
                         delay(100.milliseconds)
