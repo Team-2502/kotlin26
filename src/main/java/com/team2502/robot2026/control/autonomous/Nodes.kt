@@ -13,16 +13,16 @@ import kotlin.math.min
 // TODO: make rotation intelligent: can be optional, whitelist, or blacklist
 enum class Nodes(val translation: Translation2d, val rotation: Rotation2d) {
     A(Translation2d(1.673, 2.582), Rotation2d(0.0)), //
-    B(Translation2d(3.462, 0.644), Rotation2d(PI)), //
+    B(Translation2d(3.462, 0.644), Rotation2d(0.0)), //
     C(Translation2d(1.673, 4.909), Rotation2d(0.0)), //
     D(Translation2d(1.253, 7.063), Rotation2d(0.0)), //
-    E(Translation2d(3.462, 7.426), Rotation2d(PI)), //
-    G(Translation2d(5.789, 7.426), Rotation2d(PI)), //
-    H(Translation2d(5.789, 0.644), Rotation2d(PI)), //
-    I(Translation2d(10.752, 0.644), Rotation2d(0.0)), //
-    J(Translation2d(10.752, 7.426), Rotation2d(0.0)), //
-    K(Translation2d(13.079, 7.426), Rotation2d(0.0)), //
-    M(Translation2d(13.079, 0.644), Rotation2d(0.0)), //
+    E(Translation2d(3.462, 7.426), Rotation2d(0.0)), //
+    G(Translation2d(5.789, 7.426), Rotation2d(0.0)), //
+    H(Translation2d(5.789, 0.644), Rotation2d(0.0)), //
+    I(Translation2d(10.752, 0.644), Rotation2d(PI)), //
+    J(Translation2d(10.752, 7.426), Rotation2d(PI)), //
+    K(Translation2d(13.079, 7.426), Rotation2d(PI)), //
+    M(Translation2d(13.079, 0.644), Rotation2d(PI)), //
     N(Translation2d(14.868, 5.487), Rotation2d(PI)), //
     O(Translation2d(14.868, 3.16), Rotation2d(PI)), //
     P(Translation2d(15.288, 1.006), Rotation2d(PI)); //

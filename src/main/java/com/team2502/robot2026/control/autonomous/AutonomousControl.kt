@@ -69,7 +69,7 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
         ),
         MowingAutoStrategy(
             "Red Bottom Sweep Middle Return",
-            Pose2d(Translation2d(8.679983, 0.800000), Rotation2d.fromDegrees(90.0)),
+            Pose2d(Translation2d(8.679983, 0.800000), Rotation2d.fromDegrees(-90.0)),
             Pose2d(Translation2d(14.000000, 0.716969), Rotation2d.fromDegrees(180.0)),
             Pose2d(Translation2d(15.800000, 0.716969), Rotation2d.fromDegrees(180.0)),
         ),
@@ -365,9 +365,9 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
                     }
                     launch {
                         driveTo(firstTarget, pathBuilder)
-                        driveTo(middleTarget, pathBuilder, 1.5)
+                        driveTo(middleTarget, pathBuilder, 0.0)
                         driveTo(secondTarget, pathBuilder)
-                        driveTo(thirdTarget, pathBuilder, 1.5)
+                        driveTo(thirdTarget, pathBuilder, 1.0)
                     }
                 }
                 delay(5.seconds)
