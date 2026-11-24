@@ -67,6 +67,24 @@ class AutonomousControl(private val robotContainer: RobotContainer) {
                 Rotation2d.fromDegrees(180.0),
             )
         ),
+        MowingAutoStrategy(
+            "Red Bottom Sweep Middle Return",
+            Pose2d(Translation2d(8.679983, 0.800000), Rotation2d.fromDegrees(90.0)),
+            Pose2d(Translation2d(14.000000, 0.716969), Rotation2d.fromDegrees(180.0)),
+            Pose2d(Translation2d(15.800000, 0.716969), Rotation2d.fromDegrees(180.0)),
+        ),
+        MowingAutoStrategy(
+            "Blue Top Sweep Middle Return",
+            Pose2d(Translation2d(7.833065, 7.038161), Rotation2d.fromDegrees(-90.0)),
+            Pose2d(Translation2d(2.513048, 7.325687), Rotation2d.fromDegrees(0.0)),
+            Pose2d(Translation2d(0.713048, 7.325687), Rotation2d.fromDegrees(0.0)),
+        ),
+        MowingAutoStrategy(
+            "Blue Bottom Sweep Middle Return",
+            Pose2d(Translation2d(7.833065, 0.800000), Rotation2d.fromDegrees(90.0)),
+            Pose2d(Translation2d(2.513048, 0.716969), Rotation2d.fromDegrees(0.0)),
+            Pose2d(Translation2d(0.713048, 0.716969), Rotation2d.fromDegrees(0.0)),
+        ),
     )
 
 //// Builder options persist. Clear this before building any later path command.
