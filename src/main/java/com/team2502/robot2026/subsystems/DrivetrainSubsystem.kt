@@ -13,7 +13,6 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj2.command.Subsystem
-import frc.robot.lib.BLine.FollowPath
 
 class DrivetrainSubsystem : CoroutineSubsystem {
     var speedLimit: SpeedLimiter? = null

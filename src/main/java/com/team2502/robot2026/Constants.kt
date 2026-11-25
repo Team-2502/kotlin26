@@ -96,11 +96,11 @@ class Constants {
 
     object Auto {
         const val PATHFINDING_MIN_DISTANCE_TOLERANCE_METERS = 0.762 / 2.0
-        const val BLINE_TRANSLATION_KP = 3.4
-        const val BLINE_TRANSLATION_KI = 0.0
-        const val BLINE_TRANSLATION_KD = 0.8
-        const val BLINE_ROTATION_KP = 10.2
-        const val BLINE_ROTATION_KI = 0.0
-        const val BLINE_ROTATION_KD = 1.0
+        const val TRANSLATION_KP = 16.3
+        const val TRANSLATION_KI = 0.0
+        const val TRANSLATION_KD = 1.1
+        const val ROTATION_KP = 11.1
+        const val ROTATION_KI = 0.0
+        const val ROTATION_KD = 0.4
     }
 }
